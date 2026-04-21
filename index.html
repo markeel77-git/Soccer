@@ -1010,6 +1010,10 @@ const PCLS = {'Forward':'cfwd','Mid (P)':'cmp','Mid (C)':'cmc','Defense':'cdef'}
 const PLBL = {'Forward':'Forward','Mid (P)':'P-Mid','Mid (C)':'C-Mid','Defense':'Defense'};
 const PPIP = {'Forward':'pfwd','Mid (P)':'pmp','Mid (C)':'pmc','Defense':'pdef'};
 
+// Skill tiers — max 2 from either group per rotation slot (update here if ratings change)
+const TIER_TOP = ['Evan','Jack','Jacob'];    // strongest → middle
+const TIER_BOT = ['Theo','Ronan','Nathan'];  // weakest  → middle
+
 // JERSEY RULE: Home = Gray, Away = Blue
 const GAMES = [
   {id:1, date:'04/18', day:'Saturday, Apr 18', time:'4:30 PM', arrive:'4:00 PM',
@@ -1120,7 +1124,8 @@ function perms4(){
 }
 const PERMS4=perms4();
 
-function bestPos(players,gp,sp,prevFirst,randFn){
+function bestPos(players,gp,sp,prevFirst,randFn,posWeights){
+  posWeights=posWeights||{};
   let best=null,bestScore=Infinity;
   for(const perm of PERMS4){
     let score=0;
@@ -1128,6 +1133,7 @@ function bestPos(players,gp,sp,prevFirst,randFn){
       const pos=POS[perm[pi]],p=players[pi];
       if((gp[p]&&gp[p][pos])||0)score+=500;
       score+=((sp[p]&&sp[p][pos])||0)*3;
+      if(posWeights[p]&&posWeights[p][pos])score-=posWeights[p][pos]; // bonus for underplayed FWD/DEF
     }
     if(prevFirst){let m=0;for(let pi=0;pi<4;pi++)if(prevFirst[perm[pi]]===players[pi])m++;score+=m*8;}
     score+=randFn()*0.5;
@@ -1136,7 +1142,59 @@ function bestPos(players,gp,sp,prevFirst,randFn){
   const rot=new Array(4);for(let pi=0;pi<4;pi++)rot[best[pi]]=players[pi];return rot;
 }
 
-function genRots(players,seasonStats,prevRots,seed){
+// Returns {playerName:'first'|'second'} for up to 2 players who were exclusively
+// in the same half-of-quarter group across the last 2 completed games.
+function computeGroupPrefs(){
+  const done=Object.entries(S.games)
+    .filter(([,gd])=>gd.done&&gd.rots)
+    .sort(([a],[b])=>parseInt(a)-parseInt(b));
+  if(done.length<2)return{};
+  const last2=done.slice(-2);
+  const result={};
+  S.roster.forEach(p=>{
+    let alwaysFirst=true,alwaysSecond=true,gameCount=0;
+    last2.forEach(([,gd])=>{
+      const rpq=gd.rpq||2;let fc=0,sc=0;
+      for(let q=0;q<4;q++){
+        if((gd.rots[q*rpq]||[]).includes(p))fc++;
+        else if((gd.rots[q*rpq+1]||[]).includes(p))sc++;
+      }
+      if(fc>0||sc>0)gameCount++;
+      if(fc>0&&sc===0)alwaysSecond=false;
+      else if(sc>0&&fc===0)alwaysFirst=false;
+      else if(fc>0||sc>0){alwaysFirst=false;alwaysSecond=false;}
+      // fc===0 && sc===0 → absent; don't break the streak
+    });
+    if(gameCount<2)return; // need data from both games
+    if(alwaysFirst)result[p]='first';
+    else if(alwaysSecond)result[p]='second';
+  });
+  const keys=Object.keys(result);
+  if(keys.length>2)keys.slice(2).forEach(k=>delete result[k]); // cap at 2 per-game corrections
+  return result;
+}
+
+// Swaps out up to one over-represented tier player per tier so neither top nor bottom
+// tier exceeds 2 players on the field in a single rotation slot.
+function applyTierBalance(onField,avail,must,tgtMap,used,left,topTier,botTier){
+  let field=[...onField],bench=[...avail];
+  for(const [tier,notTier] of [[topTier,p=>!topTier.includes(p)],[botTier,p=>!botTier.includes(p)]]){
+    if(field.filter(p=>tier.includes(p)).length<=2)continue;
+    const out=field.find(p=>tier.includes(p)&&(tgtMap[p]-used[p])<left); // non-must tier player
+    if(!out)continue;
+    const inn=bench.find(p=>notTier(p)&&(tgtMap[p]-used[p])>0); // bench player not in this tier
+    if(!inn)continue;
+    field=field.filter(p=>p!==out); field.push(inn);
+    bench=bench.filter(p=>p!==inn); bench.push(out);
+  }
+  return field;
+}
+
+function genRots(players,seasonStats,prevRots,seed,groupPrefs,tierConfig){
+  groupPrefs=groupPrefs||{};
+  const topTier=(tierConfig&&tierConfig.top)||[];
+  const botTier=(tierConfig&&tierConfig.bot)||[];
+
   const n=players.length,rpq=n>=7?2:3,total=4*rpq,totalSlots=total*4;
   const sMins=players.map(p=>seasonStats[p]?.min||0),minS=Math.min(...sMins);
   const invW=sMins.map(m=>1/(1+(m-minS)/10)),wSum=invW.reduce((a,b)=>a+b,0);
@@ -1145,17 +1203,55 @@ function genRots(players,seasonStats,prevRots,seed){
   raw.map((x,i)=>({i,f:x-Math.floor(x)})).sort((a,b)=>b.f-a.f).forEach(({i},k)=>{if(k<rem)tgt[i]++;});
   const tgtMap={};players.forEach((p,i)=>tgtMap[p]=tgt[i]);
   const sp={};players.forEach(p=>{sp[p]={...((seasonStats[p]&&seasonStats[p].pos)||{'Forward':0,'Mid (P)':0,'Mid (C)':0,'Defense':0})};});
+
+  // Position-imbalance weights: bonus for underplayed FWD/DEF vs season fair share
+  const posWeights={};
+  players.forEach(p=>{
+    const pd=seasonStats[p]?.pos||{'Forward':0,'Mid (P)':0,'Mid (C)':0,'Defense':0};
+    const tot=Object.values(pd).reduce((a,b)=>a+b,0);
+    posWeights[p]={};
+    if(tot>0){const fair=tot/4;['Forward','Defense'].forEach(pos=>{const def=fair-(pd[pos]||0);if(def>0.5)posWeights[p][pos]=Math.min(def*2,8);});}
+  });
+
   let rng=seed||42;const rand=()=>{rng=(rng*1664525+1013904223)&0xffffffff;return(rng>>>0)/4294967296;};
   const rots=[],gpC={},used={};players.forEach(p=>{gpC[p]={};used[p]=0;});
+
   for(let r=0;r<total;r++){
-    const left=total-r,must=players.filter(p=>(tgtMap[p]-used[p])>=left);
+    const left=total-r,isFirst=(r%rpq===0);
+    const must=players.filter(p=>(tgtMap[p]-used[p])>=left);
     let onField=[...must];
-    if(onField.length>4)onField=onField.sort((a,b)=>(sMins[players.indexOf(a)])-(sMins[players.indexOf(b)])).slice(0,4);
+
+    if(onField.length>4){
+      // Too many must-play players: keep those with least season time, then by group preference
+      onField=onField.sort((a,b)=>{
+        const md=(sMins[players.indexOf(a)])-(sMins[players.indexOf(b)]);
+        if(md)return md;
+        // Prefer to keep players that belong in this slot type (lower value = kept)
+        const ga=groupPrefs[a]==='first'?(isFirst?1:-1):groupPrefs[a]==='second'?(isFirst?-1:1):0;
+        const gb=groupPrefs[b]==='first'?(isFirst?1:-1):groupPrefs[b]==='second'?(isFirst?-1:1):0;
+        return ga-gb;
+      }).slice(0,4);
+    }
+
     if(onField.length<4){
-      const pool=players.filter(p=>!onField.includes(p)).sort((a,b)=>(tgtMap[b]-used[b])-(tgtMap[a]-used[a])||(sMins[players.indexOf(a)])-(sMins[players.indexOf(b)]));
+      // Fill from bench: equity first, then prefer players in their non-usual group slot
+      const pool=players.filter(p=>!onField.includes(p)).sort((a,b)=>{
+        const td=(tgtMap[b]-used[b])-(tgtMap[a]-used[a]);if(td)return td;
+        const ga=groupPrefs[a]==='first'?(isFirst?-2:2):groupPrefs[a]==='second'?(isFirst?2:-2):0;
+        const gb=groupPrefs[b]==='first'?(isFirst?-2:2):groupPrefs[b]==='second'?(isFirst?2:-2):0;
+        if(ga!==gb)return gb-ga; // higher score = better fit for this slot → comes first
+        return(sMins[players.indexOf(a)])-(sMins[players.indexOf(b)]);
+      });
       while(onField.length<4&&pool.length)onField.push(pool.shift());
     }
-    const rot=bestPos(onField,gpC,sp,r===0?prevRots?.[0]:null,rand);
+
+    // Tier balance: ensure no more than 2 top-tier or 2 bottom-tier players per rotation
+    if(topTier.length||botTier.length){
+      const avail=players.filter(p=>!onField.includes(p));
+      onField=applyTierBalance(onField,avail,must,tgtMap,used,left,topTier,botTier);
+    }
+
+    const rot=bestPos(onField,gpC,sp,r===0?prevRots?.[0]:null,rand,posWeights);
     rots.push(rot);
     onField.forEach(p=>used[p]++);
     POS.forEach((pos,i)=>{const p=rot[i];if(!p)return;if(!gpC[p])gpC[p]={};gpC[p][pos]=(gpC[p][pos]||0)+1;sp[p][pos]++;});
@@ -1418,7 +1514,9 @@ function doGenerate(seedOverride){
   const att=getAtt(S.gid);if(att.length<4){showAlerts([{t:'a-warn',msg:'Need at least 4 players.'}]);return;}
   const prev=S.games[String(S.gid-1)]?.rots||null;
   const seed=seedOverride||(Math.floor(Math.random()*1e9)+1);
-  const{rots,rpq}=genRots(att,S.ps,prev,seed);
+  const groupPrefs=computeGroupPrefs();
+  const tierConfig={top:TIER_TOP.filter(p=>att.includes(p)),bot:TIER_BOT.filter(p=>att.includes(p))};
+  const{rots,rpq}=genRots(att,S.ps,prev,seed,groupPrefs,tierConfig);
   const gd=S.games[String(S.gid)]=S.games[String(S.gid)]||{};
   gd.rots=rots;gd.rpq=rpq;gd.locked=false;gd._seed=seed;
   save();renderPlan();
