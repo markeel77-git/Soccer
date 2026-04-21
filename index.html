@@ -672,29 +672,32 @@ header {
 }
 
 /* ── PRINT MEDIA — B&W, ink-minimal ── */
+@page { size: letter portrait; margin: 0.25in; }
 @media print {
   .promo-bar, header, .tabs, .no-print,
   .lock-bar, #alertBox, #doneCard, #capCard, #emailCard,
   .page-header-row { display: none !important; }
   body { background: #fff; font-family: Arial, sans-serif; font-size: 10pt; }
-  .page.on { padding: 8px; max-width: 100%; }
+  .page.on { padding: 4px; max-width: 100%; }
+  .print-copies { display: block; }
   .print-copy-card {
     border: 1px solid #000;
-    padding: 8px;
+    padding: 5px 6px;
     page-break-inside: avoid;
-    margin-bottom: 12px;
+    break-inside: avoid;
+    margin-bottom: 6px;
     background: #fff;
   }
-  .pc-header { border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 6px; }
-  .pc-title { font-size: 12pt; font-weight: 700; }
-  .pc-meta { font-size: 9pt; color: #444; }
-  .pc-table { width: 100%; border-collapse: collapse; font-size: 9pt; margin-top: 6px; }
-  .pc-table th { background: #eee !important; border: 1px solid #999; padding: 3px 6px; font-weight: 700; text-align: center; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .pc-header { border-bottom: 2px solid #000; padding-bottom: 3px; margin-bottom: 4px; }
+  .pc-title { font-size: 10pt; font-weight: 700; }
+  .pc-meta { font-size: 8pt; color: #444; line-height: 1.4; }
+  .pc-table { width: 100%; border-collapse: collapse; font-size: 8pt; margin-top: 4px; }
+  .pc-table th { background: #eee !important; border: 1px solid #999; padding: 2px 4px; font-weight: 700; text-align: center; print-color-adjust: exact; -webkit-print-color-adjust: exact; font-size: 7.5pt; line-height: 1.3; }
   .pc-table th:first-child { text-align: left; }
-  .pc-table td { border: 1px solid #999; padding: 3px 6px; text-align: center; vertical-align: middle; }
-  .pc-table td:first-child { text-align: left; font-weight: 700; background: #f0f0f0 !important; font-size: 8pt; text-transform: uppercase; letter-spacing: 0.03em; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .pc-table td { border: 1px solid #999; padding: 2px 4px; text-align: center; vertical-align: middle; line-height: 1.3; }
+  .pc-table td:first-child { text-align: left; font-weight: 700; background: #f0f0f0 !important; font-size: 7.5pt; text-transform: uppercase; letter-spacing: 0.03em; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
   .pc-table td.player-name { font-weight: 600; text-align: center; }
-  .pc-table tr.out-row td { color: #555; font-style: italic; text-align: center; }
+  .pc-table tr.out-row td { color: #555; font-style: italic; text-align: center; font-size: 7.5pt; line-height: 1.3; }
   .pc-table tr.out-row td:first-child { text-align: left; }
   .pc-table th.q-start, .pc-table td.q-start { border-left: 2pt solid #333; }
   .no-print { display: none !important; }
@@ -1527,7 +1530,14 @@ function nav(name,tabEl){
 // ══════════════════════════════════════
 function renderSeason(){
   const dc=Object.values(S.games).filter(g=>g.done).length;
+  let wins=0,losses=0,ties=0;
+  Object.values(S.games).forEach(gd=>{if(gd.done&&gd.score){const[u,t]=gd.score;if(u>t)wins++;else if(t>u)losses++;else ties++;}});
   document.getElementById('seasonSum').innerHTML=`
+    <div style="min-width:140px;padding-right:24px;margin-right:8px;border-right:1px solid var(--grey-200)">
+      <div class="xs muted" style="text-transform:uppercase;letter-spacing:.06em;font-weight:500">Record</div>
+      <div style="font-size:34px;font-weight:700;font-family:var(--font-mono);letter-spacing:.04em;line-height:1.1">${wins}–${losses}–${ties}</div>
+      <div class="xs muted">W – L – T</div>
+    </div>
     <div style="min-width:100px"><div class="xs muted" style="text-transform:uppercase;letter-spacing:.06em;font-weight:500">Games Played</div><div style="font-size:28px;font-weight:500;font-family:var(--font-mono)">${dc}/6</div></div>
     <div style="min-width:100px"><div class="xs muted" style="text-transform:uppercase;letter-spacing:.06em;font-weight:500">Next Game</div><div style="font-size:28px;font-weight:500;font-family:var(--font-mono)">${GAMES.find(g=>!S.games[String(g.id)]?.done)?.date||'Done!'}</div></div>
     <div style="min-width:100px"><div class="xs muted" style="text-transform:uppercase;letter-spacing:.06em;font-weight:500">Roster</div><div style="font-size:28px;font-weight:500;font-family:var(--font-mono)">${S.roster.length}</div></div>`;
@@ -1587,8 +1597,8 @@ function renderPrint(){
         <div class="pc-title">⚡ THUNDER &nbsp;·&nbsp; Game ${gid} &nbsp;·&nbsp; ${g.date}</div>
         <div class="pc-meta">${vs} &nbsp;·&nbsp; ${g.loc} ${g.field} &nbsp;·&nbsp; Arrive: ${g.arrive} &nbsp;·&nbsp; Kickoff: ${g.time} &nbsp;·&nbsp; Jersey: <strong>${jersey}</strong></div>`;
     if(caps.length)h+=`<div class="pc-meta">Captains: <strong>${caps.join(' & ')}</strong></div>`;
-    if(gd.score)h+=`<div class="pc-meta">Score: <strong>Thunder ${gd.score[0]} – ${gd.score[1]} ${g.opp}</strong></div>`;
-    h+=`<div style="font-size:8pt;color:#aaa">Copy ${n} of 3</div></div>`;
+    h+=`<div class="pc-meta">Score: Thunder <span style="display:inline-block;min-width:24px;height:14px;border:1.5px solid #555;margin:0 3px;vertical-align:middle"></span> – ${g.opp} <span style="display:inline-block;min-width:24px;height:14px;border:1.5px solid #555;margin:0 3px;vertical-align:middle"></span></div>`;
+    h+=`</div>`;
 
     // Table — q-start class marks first column of each quarter for thick left border
     h+=`<table class="pc-table"><thead><tr><th>Position</th>`;
@@ -1596,7 +1606,7 @@ function renderPrint(){
       for(let r=0;r<rpq;r++){
         const mS=r*Math.floor(10/rpq),mE=(r+1)*Math.floor(10/rpq);
         const qStart=(r===0)?'q-start':'';
-        h+=`<th class="${qStart}">${QN[q]}<br><span style="font-weight:400">${mS}–${mE}'</span></th>`;
+        h+=`<th class="${qStart}">${QN[q]}<br><span style="font-weight:400">${mS}min – ${mE}min</span></th>`;
       }
     }
     h+=`</tr></thead><tbody>`;
@@ -1613,7 +1623,9 @@ function renderPrint(){
     for(let q=0;q<4;q++){for(let r=0;r<rpq;r++){
       const ri=q*rpq+r,rot=rots[ri]||[],out=att.filter(p=>!rot.includes(p));
       const qStart=(r===0)?'q-start':'';
-      h+=`<td class="${qStart}">${out.join(', ')||'—'}</td>`;
+      let outHtml='—';
+      if(out.length){const pairs=[];for(let i=0;i<out.length;i+=2)pairs.push(out.slice(i,i+2).join(', '));outHtml=pairs.join('<br>');}
+      h+=`<td class="${qStart}">${outHtml}</td>`;
     }}
     h+=`</tr></tbody></table></div>`;
     return h;
@@ -1732,6 +1744,21 @@ if(!S.games['1'])S.games['1']={done:true,att:[...ROSTER0],rots:G1R,rpq:2,locked:
 if(!S.capLog||!S.capLog.length)S.capLog=[{gid:1,caps:['Evan','Beckem']}];
 if(!S.gid)S.gid=2;
 renderPlan();
+
+// ── Print auto-scale: fit all 3 slips on one page ──
+window.addEventListener('beforeprint',()=>{
+  const el=document.querySelector('#printArea .print-copies');
+  if(!el)return;
+  el.style.zoom='';
+  // Letter paper 11in - 0.5in margins = 10.5in = 1008px at 96dpi
+  const target=1000;
+  const h=el.offsetHeight;
+  if(h>target){el.style.zoom=String((target/h).toFixed(3));}
+});
+window.addEventListener('afterprint',()=>{
+  const el=document.querySelector('#printArea .print-copies');
+  if(el)el.style.zoom='';
+});
 </script>
 </body>
 </html>
