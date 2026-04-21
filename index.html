@@ -1,0 +1,1737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thunder — Sub Tracker</title>
+<style>
+/* ── FONTS ── */
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Barlow+Condensed:wght@700;800&family=Helvetica+Neue:wght@400;500&display=swap');
+
+/* ── NIKE DESIGN SYSTEM TOKENS ── */
+:root {
+  /* Nike core */
+  --black: #111111;
+  --white: #FFFFFF;
+  --grey-50:  #FAFAFA;
+  --grey-100: #F5F5F5;
+  --grey-200: #E5E5E5;
+  --grey-300: #CACACB;
+  --grey-500: #707072;
+  --grey-700: #39393B;
+  --grey-800: #28282A;
+  --grey-900: #1F1F21;
+
+  /* Semantic */
+  --red:    #D30005;
+  --green:  #007D48;
+  --blue:   #1151FF;
+  --orange: #FF5000;
+
+  /* Text */
+  --text-primary:   #111111;
+  --text-secondary: #707072;
+  --text-disabled:  #9E9EA0;
+
+  /* Borders */
+  --border-primary:   #707072;
+  --border-secondary: #CACACB;
+  --border-active:    #111111;
+
+  /* Typography */
+  --font-display: 'Barlow Condensed', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-body:    'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-mono:    'DM Mono', 'Courier New', monospace;
+
+  /* Thunder accent (used ONLY for header branding — UI stays monochromatic) */
+  --bolt: #F5C518;
+  --bolt-d: #D4A810;
+
+  /* Jersey */
+  --j-blue: #1A5FB4;
+  --j-gray: #707072;
+
+  /* Positions — only color in the UI per Nike "product=color" principle */
+  --pos-fwd-bg: #FFF8E8; --pos-fwd-fg: #7A4A00;
+  --pos-mp-bg:  #E8F4FF; --pos-mp-fg:  #1A4A7A;
+  --pos-mc-bg:  #E8FFF0; --pos-mc-fg:  #1A5A2A;
+  --pos-def-bg: #FFE8F0; --pos-def-fg: #7A1A2A;
+}
+
+/* ── RESET ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font-body);
+  font-weight: 400;
+  background: var(--white);
+  color: var(--text-primary);
+  min-height: 100vh;
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+/* ── PROMO BANNER ── */
+.promo-bar {
+  background: var(--black);
+  color: var(--white);
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+  padding: 8px 16px;
+  letter-spacing: 0.02em;
+  line-height: 1.5;
+}
+
+/* ── HEADER / NAV ── */
+header {
+  background: var(--white);
+  border-bottom: 1px solid var(--grey-200);
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 48px;
+}
+.h-left { display: flex; align-items: center; gap: 12px; }
+.h-wordmark {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--black);
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.h-wordmark .bolt { color: var(--bolt); }
+.h-eyebrow {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-left: 1px solid var(--border-secondary);
+  padding-left: 12px;
+  margin-left: 4px;
+}
+.h-right { display: flex; align-items: center; gap: 8px; }
+.h-badge {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  background: var(--grey-100);
+  color: var(--text-secondary);
+  padding: 4px 12px;
+  border-radius: 30px;
+  border: 1px solid var(--border-secondary);
+}
+
+/* ── NAV TABS ── */
+.tabs {
+  background: var(--white);
+  display: flex;
+  padding: 0 48px;
+  border-bottom: 1px solid var(--grey-200);
+  overflow-x: auto;
+  gap: 0;
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  padding: 12px 0;
+  margin-right: 32px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+  user-select: none;
+  text-transform: uppercase;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+}
+.tab:hover { color: var(--black); }
+.tab.on { color: var(--black); border-bottom-color: var(--black); }
+
+/* ── PAGES ── */
+.page { display: none; padding: 48px; max-width: 1200px; margin: 0 auto; }
+.page.on { display: block; }
+
+/* ── SECTION HEADINGS ── */
+.section-eyebrow {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+.section-title {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+  color: var(--black);
+  margin-bottom: 24px;
+}
+.page-meta {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 32px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.meta-sep { color: var(--grey-300); }
+
+/* ── CARDS ── */
+.card {
+  background: var(--white);
+  border: 1px solid var(--grey-200);
+  border-radius: 0;
+  padding: 24px;
+  margin-bottom: 1px;
+}
+.card:first-child { border-radius: 0; }
+.card-group { border: 1px solid var(--grey-200); margin-bottom: 24px; }
+.card-group .card { border: none; border-bottom: 1px solid var(--grey-200); margin-bottom: 0; }
+.card-group .card:last-child { border-bottom: none; }
+.card-label {
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* ── BUTTONS — Nike pill style ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 24px;
+  border-radius: 30px;
+  border: none;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+  line-height: 1.5;
+}
+.btn-primary {
+  background: var(--black);
+  color: var(--white);
+}
+.btn-primary:hover { background: var(--grey-500); }
+
+.btn-secondary {
+  background: transparent;
+  color: var(--black);
+  border: 1.5px solid var(--border-secondary);
+}
+.btn-secondary:hover { border-color: var(--border-primary); }
+
+.btn-sm {
+  padding: 8px 16px;
+  font-size: 13px;
+}
+
+.btn-ghost {
+  background: var(--grey-100);
+  color: var(--text-secondary);
+  border: none;
+}
+.btn-ghost:hover { background: var(--grey-200); }
+
+.btn-danger {
+  background: var(--red);
+  color: var(--white);
+  border: none;
+}
+.btn-danger:hover { background: #AA0004; }
+
+.btn-lock-on {
+  background: #E8F8EE;
+  color: var(--green);
+  border: 1.5px solid var(--green);
+  font-weight: 600;
+}
+.btn-lock-off {
+  background: var(--grey-100);
+  color: var(--text-primary);
+  border: 1.5px solid var(--border-secondary);
+}
+.btn-lock-off:hover { border-color: var(--border-primary); }
+
+/* ── BADGES ── */
+.badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 30px;
+  font-size: 11px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  background: var(--grey-100);
+  border: 1px solid var(--border-secondary);
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+}
+.badge-green { background: #E8F8EE; border-color: #70C880; color: var(--green); }
+.badge-warn  { background: #FFFBE8; border-color: #E8C040; color: #6A4A00; }
+.badge-red   { background: #FFE8E8; border-color: #E08080; color: var(--red); }
+.badge-blue  { background: #E8F0FF; border-color: #90B8F8; color: var(--blue); }
+.badge-bolt  { background: rgba(245,197,24,.12); border-color: var(--bolt-d); color: #6A4A00; }
+
+/* ── DIVIDER ── */
+.divider { height: 1px; background: var(--grey-200); margin: 24px 0; }
+
+/* ── JERSEY CHIP — Nike pill style ── */
+.jersey-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 30px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  margin-bottom: 24px;
+}
+.jersey-home {
+  background: var(--grey-100);
+  color: var(--j-gray);
+  border: 1.5px solid var(--border-secondary);
+}
+.jersey-away {
+  background: #E8F0FF;
+  color: var(--j-blue);
+  border: 1.5px solid #90B8F8;
+}
+.j-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.j-dot-home { background: var(--j-gray); }
+.j-dot-away { background: var(--j-blue); }
+
+/* ── ALERTS ── */
+.alert {
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 400;
+  margin-bottom: 8px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  line-height: 1.5;
+  border-radius: 0;
+}
+.a-warn { background: #FFFBE8; border-left: 3px solid #E8C040; color: #6A4A00; }
+.a-ok   { background: #E8F8EE; border-left: 3px solid var(--green); color: #1A5A2A; }
+.a-info { background: #E8F0FF; border-left: 3px solid var(--blue); color: #1A2A6A; }
+
+/* ── ATTENDANCE GRID ── */
+.att-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.att-btn {
+  border: 1.5px solid var(--border-secondary);
+  border-radius: 30px;
+  padding: 10px 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  background: var(--white);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  user-select: none;
+  font-family: var(--font-body);
+}
+.att-btn:hover { border-color: var(--border-primary); }
+.att-btn.yes {
+  border-color: var(--black);
+  background: var(--black);
+  color: var(--white);
+}
+.att-btn.no { opacity: 0.32; text-decoration: line-through; color: var(--text-disabled); border-style: dashed; }
+
+/* ── ROTATION TABLE ── */
+.rot-block { margin-bottom: 24px; border: 1px solid var(--grey-200); }
+.rot-qhead {
+  background: var(--black);
+  color: var(--white);
+  padding: 10px 16px;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.rot-qhead .qtime {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--grey-500);
+  letter-spacing: 0.04em;
+}
+.rot-tbl { width: 100%; border-collapse: collapse; }
+.rot-tbl th {
+  background: var(--grey-100);
+  color: var(--text-secondary);
+  padding: 8px 16px;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-align: center;
+  border-bottom: 1px solid var(--grey-200);
+}
+.rot-tbl th:first-child { text-align: left; width: 100px; }
+.rot-tbl td {
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  border-top: 1px solid var(--grey-200);
+}
+.rot-tbl td:first-child {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: var(--grey-50);
+  text-align: left;
+}
+/* Position colors — the only non-grey color in the UI */
+.cfwd { background: var(--pos-fwd-bg); color: var(--pos-fwd-fg); }
+.cmp  { background: var(--pos-mp-bg);  color: var(--pos-mp-fg);  }
+.cmc  { background: var(--pos-mc-bg);  color: var(--pos-mc-fg);  }
+.cdef { background: var(--pos-def-bg); color: var(--pos-def-fg); }
+.cout { color: var(--text-secondary); font-style: italic; font-size: 12px; font-weight: 400; }
+.editable { cursor: pointer; }
+.editable:hover { outline: 2px solid var(--black); outline-offset: -2px; }
+
+/* ── LOCK BAR ── */
+.lock-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  background: var(--grey-100);
+  border: 1px solid var(--grey-200);
+  margin-bottom: 16px;
+}
+.lock-msg {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  flex: 1;
+}
+
+/* ── CELL DROPDOWN ── */
+.cell-drop {
+  position: fixed;
+  z-index: 500;
+  background: var(--white);
+  border: 1px solid var(--black);
+  border-radius: 0;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  min-width: 130px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+.cell-drop div {
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 400;
+  cursor: pointer;
+  border-bottom: 1px solid var(--grey-100);
+}
+.cell-drop div:last-child { border-bottom: none; }
+.cell-drop div:hover { background: var(--grey-100); }
+.cell-drop div.curr { font-weight: 500; color: var(--black); }
+
+/* ── SCORE ── */
+.score-row { display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 16px; }
+.score-in {
+  width: 72px;
+  font-family: var(--font-mono);
+  font-size: 28px;
+  font-weight: 500;
+  text-align: center;
+  border: 1.5px solid var(--border-secondary);
+  border-radius: 0;
+  padding: 8px;
+  color: var(--text-primary);
+  background: var(--grey-100);
+}
+.score-in:focus { border-color: var(--border-active); outline: 2px solid rgba(39,93,197,1); }
+.score-display {
+  font-family: var(--font-display);
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--black);
+  text-transform: uppercase;
+}
+
+/* ── CAPTAIN ── */
+.cap-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+.cap-chip {
+  padding: 8px 16px;
+  border-radius: 30px;
+  font-size: 13px;
+  font-weight: 500;
+  background: var(--grey-100);
+  border: 1.5px solid var(--border-secondary);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.cap-chip .star { color: var(--bolt); font-size: 14px; }
+
+/* ── EMAIL BOX ── */
+.email-box {
+  background: var(--grey-100);
+  border: 1px solid var(--grey-200);
+  padding: 16px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  margin-bottom: 12px;
+  max-height: 240px;
+  overflow-y: auto;
+  border-radius: 0;
+}
+
+/* ── SEASON STATS ── */
+.stats-tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
+.stats-tbl th {
+  background: var(--black);
+  color: var(--white);
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+.stats-tbl td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--grey-200);
+  font-size: 13px;
+  font-weight: 400;
+}
+.stats-tbl tr:last-child td { border-bottom: none; }
+.stats-tbl tr:hover td { background: var(--grey-50); }
+.stats-tbl td:first-child { font-weight: 500; font-size: 14px; }
+.pips { display: flex; gap: 4px; }
+.pip {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 500;
+  font-family: var(--font-mono);
+}
+.pfwd { background: var(--pos-fwd-bg); color: var(--pos-fwd-fg); }
+.pmp  { background: var(--pos-mp-bg);  color: var(--pos-mp-fg); }
+.pmc  { background: var(--pos-mc-bg);  color: var(--pos-mc-fg); }
+.pdef { background: var(--pos-def-bg); color: var(--pos-def-fg); }
+.pip.hi { outline: 2px solid var(--red); }
+
+/* ── SCHEDULE GRID ── */
+.sched-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--grey-200); border: 1px solid var(--grey-200); }
+.sc {
+  background: var(--white);
+  padding: 24px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.sc:hover { background: var(--grey-50); }
+.sc.next { background: var(--grey-50); }
+.sc.done { opacity: 0.5; }
+.sc .gnum {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+.sc .gdate {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--black);
+  margin-bottom: 2px;
+  line-height: 1.1;
+}
+.sc .gtime { font-size: 13px; font-weight: 400; color: var(--text-secondary); margin-bottom: 6px; }
+.sc .gvs { font-size: 14px; font-weight: 500; color: var(--text-primary); margin-bottom: 4px; }
+.sc .gloc { font-size: 12px; font-weight: 400; color: var(--text-secondary); margin-bottom: 8px; }
+.sc .gstatus {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 30px;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.std { background: #E8F8EE; color: var(--green); }
+.stn { background: var(--black); color: var(--white); }
+.stu { background: var(--grey-100); color: var(--text-secondary); }
+
+/* ── PRINT SHEET — screen preview ── */
+@media screen {
+  .print-copies { display: grid; gap: 16px; }
+  .print-copy-card {
+    border: 1px solid #000;
+    padding: 12px;
+    background: #fff;
+    font-family: Arial, sans-serif;
+    font-size: 11px;
+  }
+  .pc-header { border-bottom: 2px solid #000; padding-bottom: 6px; margin-bottom: 8px; }
+  .pc-title { font-size: 13px; font-weight: 700; }
+  .pc-meta { font-size: 11px; color: #444; line-height: 1.5; }
+  .pc-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 8px; }
+  .pc-table th {
+    background: #e8e8e8;
+    border: 1.5px solid #666;
+    padding: 5px 7px;
+    font-weight: 700;
+    text-align: center;
+    font-size: 10px;
+    line-height: 1.3;
+  }
+  .pc-table th:first-child { text-align: left; min-width: 72px; }
+  .pc-table td {
+    border: 1px solid #aaa;
+    padding: 5px 7px;
+    text-align: center;
+    vertical-align: middle;
+  }
+  .pc-table td:first-child {
+    text-align: left;
+    font-weight: 700;
+    background: #f4f4f4;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+  .pc-table td.player-name { font-weight: 600; text-align: center; }
+  .pc-table tr.out-row td { color: #555; font-style: italic; text-align: center; }
+  .pc-table tr.out-row td:first-child { text-align: left; }
+  /* Alternating row tint for readability */
+  .pc-table tbody tr:nth-child(even) td { background: #fafafa; }
+  .pc-table tbody tr:nth-child(even) td:first-child { background: #efefef; }
+  /* Quarter column group separators */
+  .pc-table th.q-start, .pc-table td.q-start { border-left: 2.5px solid #333; }
+}
+
+/* ── PRINT MEDIA — B&W, ink-minimal ── */
+@media print {
+  .promo-bar, header, .tabs, .no-print,
+  .lock-bar, #alertBox, #doneCard, #capCard, #emailCard,
+  .page-header-row { display: none !important; }
+  body { background: #fff; font-family: Arial, sans-serif; font-size: 10pt; }
+  .page.on { padding: 8px; max-width: 100%; }
+  .print-copy-card {
+    border: 1px solid #000;
+    padding: 8px;
+    page-break-inside: avoid;
+    margin-bottom: 12px;
+    background: #fff;
+  }
+  .pc-header { border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 6px; }
+  .pc-title { font-size: 12pt; font-weight: 700; }
+  .pc-meta { font-size: 9pt; color: #444; }
+  .pc-table { width: 100%; border-collapse: collapse; font-size: 9pt; margin-top: 6px; }
+  .pc-table th { background: #eee !important; border: 1px solid #999; padding: 3px 6px; font-weight: 700; text-align: center; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .pc-table th:first-child { text-align: left; }
+  .pc-table td { border: 1px solid #999; padding: 3px 6px; text-align: center; vertical-align: middle; }
+  .pc-table td:first-child { text-align: left; font-weight: 700; background: #f0f0f0 !important; font-size: 8pt; text-transform: uppercase; letter-spacing: 0.03em; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .pc-table td.player-name { font-weight: 600; text-align: center; }
+  .pc-table tr.out-row td { color: #555; font-style: italic; text-align: center; }
+  .pc-table tr.out-row td:first-child { text-align: left; }
+  .pc-table th.q-start, .pc-table td.q-start { border-left: 2pt solid #333; }
+  .no-print { display: none !important; }
+}
+
+/* ── INPUTS ── */
+input[type=text], input[type=number], select {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border-secondary);
+  border-radius: 8px;
+  background: var(--grey-100);
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.15s;
+}
+input:focus, select:focus {
+  border-color: var(--border-active);
+  background: var(--white);
+  outline: 2px solid rgba(39,93,197,1);
+  outline-offset: 0;
+}
+label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  display: block;
+  margin-bottom: 6px;
+}
+
+/* ── EQUITY BAR ── */
+.eq-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.eq-name { width: 72px; font-size: 13px; font-weight: 500; }
+.eq-track { flex: 1; background: var(--grey-200); height: 8px; border-radius: 0; overflow: hidden; }
+.eq-fill { height: 100%; background: var(--black); border-radius: 0; transition: width 0.3s; }
+.eq-val { font-family: var(--font-mono); font-size: 12px; color: var(--text-secondary); width: 52px; text-align: right; }
+
+/* ── CAP SEASON GRID ── */
+.cap-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.cap-cell {
+  background: var(--grey-100);
+  border: 1px solid var(--grey-200);
+  padding: 12px 16px;
+  text-align: center;
+  min-width: 88px;
+}
+.cap-cell .cn { font-size: 14px; font-weight: 500; }
+.cap-cell .cc { font-family: var(--font-mono); font-size: 11px; color: var(--text-secondary); }
+
+/* ── ROSTER ── */
+.roster-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.roster-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--grey-100);
+  padding: 6px 12px;
+  border-radius: 30px;
+  border: 1px solid var(--border-secondary);
+  font-size: 14px;
+  font-weight: 500;
+}
+.roster-chip button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 12px;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.1s;
+}
+.roster-chip button:hover { color: var(--red); }
+
+/* ── UTILITY ── */
+.flex { display: flex; }
+.fb { display: flex; justify-content: space-between; align-items: center; }
+.gap8 { gap: 8px; } .gap12 { gap: 12px; } .gap16 { gap: 16px; }
+.wrap { flex-wrap: wrap; }
+.mt8 { margin-top: 8px; } .mt16 { margin-top: 16px; } .mt24 { margin-top: 24px; }
+.mb8 { margin-bottom: 8px; } .mb16 { margin-bottom: 16px; }
+.mono { font-family: var(--font-mono); }
+.sm { font-size: 13px; } .xs { font-size: 12px; }
+.muted { color: var(--text-secondary); }
+.bold { font-weight: 500; }
+hr { border: none; border-top: 1px solid var(--grey-200); margin: 24px 0; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--black);
+  color: var(--white);
+  padding: 12px 24px;
+  border-radius: 30px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 999;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; }
+
+@media (max-width: 768px) {
+  header { padding: 0 16px; }
+  .tabs { padding: 0 16px; }
+  .page { padding: 24px 16px; }
+  .h-eyebrow { display: none; }
+  .att-grid { grid-template-columns: repeat(4, 1fr); }
+  .sched-grid { grid-template-columns: repeat(2, 1fr); }
+  .print-copies { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- Promo bar -->
+<div class="promo-bar no-print">Thunder U9 · CF09A · Cedar Falls, IA · Spring 2026</div>
+
+<!-- Header -->
+<header>
+  <div class="h-left">
+    <div class="h-wordmark"><span class="bolt">⚡</span>THUNDER</div>
+    <span class="h-eyebrow">U9 Sub Tracker</span>
+  </div>
+  <div class="h-right">
+    <div id="hbadge" class="h-badge">Game 2</div>
+  </div>
+</header>
+
+<!-- Tabs -->
+<div class="tabs">
+  <div class="tab on"  onclick="nav('plan',this)">Game Plan</div>
+  <div class="tab"    onclick="nav('season',this)">Season Stats</div>
+  <div class="tab"    onclick="nav('print',this)">Print Sheet</div>
+  <div class="tab"    onclick="nav('schedule',this)">Schedule</div>
+  <div class="tab"    onclick="nav('roster',this)">Roster</div>
+</div>
+
+<!-- ══ PLAN ══ -->
+<div id="page-plan" class="page on">
+  <div class="page-header-row fb mb16 wrap gap8 no-print">
+    <div>
+      <div class="section-eyebrow" id="planEyebrow">Game 2</div>
+      <div class="section-title" id="planTitle">Home vs AP09B</div>
+    </div>
+    <div class="flex gap8 wrap">
+      <button class="btn btn-secondary btn-sm" onclick="prevG()">← Prev</button>
+      <button class="btn btn-secondary btn-sm" onclick="nextG()">Next →</button>
+    </div>
+  </div>
+  <div class="page-meta" id="planMeta">—</div>
+
+  <div id="jerseyBanner"></div>
+
+  <!-- Captains -->
+  <div class="card-group no-print" id="capCard">
+    <div class="card">
+      <div class="card-label">Captains <span id="capNote" class="badge badge-warn">Suggested</span></div>
+      <div id="capArea"></div>
+    </div>
+  </div>
+
+  <!-- Attendance -->
+  <div class="card-group no-print">
+    <div class="card">
+      <div class="card-label">Attendance <span id="attBadge" class="badge">8/8</span></div>
+      <div class="att-grid" id="attGrid"></div>
+      <div class="flex gap8 wrap">
+        <button class="btn btn-primary btn-sm" onclick="doGenerate()">⚡ Generate Rotation</button>
+        <button class="btn btn-secondary btn-sm" onclick="allPresent()">All Present</button>
+        <button class="btn btn-secondary btn-sm" id="reshuffleBtn" style="display:none" onclick="doReshuffle()">↻ Reshuffle</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="alertBox"></div>
+
+  <!-- Lock bar -->
+  <div id="lockBar" class="lock-bar no-print" style="display:none">
+    <span id="lockMsg" class="lock-msg">—</span>
+    <button class="btn btn-sm" id="lockBtn" onclick="toggleLock()">🔓 Lock Plan</button>
+    <button class="btn btn-secondary btn-sm" id="regenBtn" onclick="doGenerate()">↺ Regenerate</button>
+  </div>
+
+  <!-- Rotation -->
+  <div id="rotArea"></div>
+
+  <!-- Score -->
+  <div id="doneCard" class="card-group no-print" style="display:none">
+    <div class="card">
+      <div class="card-label">Game Result</div>
+      <div id="scoreDisplay"></div>
+    </div>
+  </div>
+
+  <!-- Email -->
+  <div id="emailCard" class="card-group no-print" style="display:none">
+    <div class="card">
+      <div class="card-label">Parent Game-Day Email</div>
+      <div id="emailBody" class="email-box"></div>
+      <button class="btn btn-primary btn-sm" onclick="copyEmail()">Copy to Clipboard</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SEASON ══ -->
+<div id="page-season" class="page">
+  <div class="section-eyebrow">Thunder · CF09A</div>
+  <div class="section-title">Season Stats</div>
+  <div class="card-group mb16">
+    <div class="card"><div id="seasonSum" class="flex gap16 wrap"></div></div>
+  </div>
+  <div class="card-group mb16">
+    <div class="card">
+      <div class="card-label">Player Stats</div>
+      <div id="statsAlerts"></div>
+      <div style="overflow-x:auto;margin-top:8px">
+        <table class="stats-tbl"><thead><tr>
+          <th>Player</th><th>Games</th><th>Total Min</th><th>Avg/Game</th>
+          <th>FWD</th><th>Mid-P</th><th>Mid-C</th><th>DEF</th>
+          <th>Cap×</th><th>Position Mix</th>
+        </tr></thead><tbody id="statsBody"></tbody></table>
+      </div>
+    </div>
+  </div>
+  <div class="card-group mb16">
+    <div class="card">
+      <div class="card-label">Playing Time Equity</div>
+      <div id="equityBars" class="mt8"></div>
+    </div>
+  </div>
+  <div class="card-group">
+    <div class="card">
+      <div class="card-label">Captain Rotation</div>
+      <div class="xs muted mb8">Each player captains before anyone gets a 2nd turn. Game 1: Evan & Beckem.</div>
+      <div id="capSeason" class="cap-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PRINT ══ -->
+<div id="page-print" class="page">
+  <div class="section-eyebrow no-print">Thunder · CF09A</div>
+  <div class="section-title no-print">Game Day Sub Sheet</div>
+  <div class="flex gap8 wrap mb16 no-print" style="align-items:flex-end">
+    <div>
+      <label>Select Game</label>
+      <select id="printSel" onchange="renderPrint()"><option value="">Choose…</option></select>
+    </div>
+    <button class="btn btn-primary" onclick="window.print()" style="margin-top:22px">Print →</button>
+  </div>
+  <div id="printArea"><div class="muted sm" style="padding:24px 0">Select a game above to preview the print sheet.</div></div>
+</div>
+
+<!-- ══ SCHEDULE ══ -->
+<div id="page-schedule" class="page">
+  <div class="section-eyebrow">Spring 2026</div>
+  <div class="section-title">Season Schedule</div>
+  <div class="sched-grid" id="schedGrid"></div>
+</div>
+
+<!-- ══ ROSTER ══ -->
+<div id="page-roster" class="page">
+  <div class="section-eyebrow">Thunder · CF09A</div>
+  <div class="section-title">Roster</div>
+  <div class="card-group mb16">
+    <div class="card">
+      <div class="card-label">Players</div>
+      <div id="rosterList"></div>
+      <hr>
+      <div class="flex gap8 wrap" style="align-items:flex-end">
+        <div><label>Add Player</label><input type="text" id="newName" placeholder="First name" style="width:160px"></div>
+        <button class="btn btn-primary btn-sm" onclick="addPlayer()" style="margin-top:22px">+ Add</button>
+      </div>
+    </div>
+  </div>
+  <div class="card-group">
+    <div class="card">
+      <div class="card-label">Data Management</div>
+      <div class="flex gap8 wrap">
+        <button class="btn btn-secondary btn-sm" onclick="exportData()">Export JSON</button>
+        <button class="btn btn-secondary btn-sm" onclick="importData()">Import JSON</button>
+        <button class="btn btn-danger btn-sm" onclick="resetAll()">Reset All Data</button>
+      </div>
+      <div class="xs muted mt8">Data saved in browser local storage. Export JSON to back up or share between devices.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Cell dropdown -->
+<div id="cellDrop" class="cell-drop" style="display:none"></div>
+<!-- Toast -->
+<div id="toast" class="toast">Copied!</div>
+
+<script>
+// ══════════════════════════════════════
+// CONSTANTS
+// ══════════════════════════════════════
+const POS  = ['Forward','Mid (P)','Mid (C)','Defense'];
+const PKEY = {'Forward':'fwd','Mid (P)':'mp','Mid (C)':'mc','Defense':'def'};
+const PCLS = {'Forward':'cfwd','Mid (P)':'cmp','Mid (C)':'cmc','Defense':'cdef'};
+const PLBL = {'Forward':'Forward','Mid (P)':'P-Mid','Mid (C)':'C-Mid','Defense':'Defense'};
+const PPIP = {'Forward':'pfwd','Mid (P)':'pmp','Mid (C)':'pmc','Defense':'pdef'};
+
+// JERSEY RULE: Home = Gray, Away = Blue
+const GAMES = [
+  {id:1, date:'04/18', day:'Saturday, Apr 18', time:'4:30 PM', arrive:'4:00 PM',
+   home:false, opp:'CF09F', loc:'Cedar Valley Soccer Complex', field:'Field 2B'},
+  {id:2, date:'04/25', day:'Saturday, Apr 25', time:'3:00 PM', arrive:'2:30 PM',
+   home:true,  opp:'AP09B', loc:'Cedar Valley Soccer Complex', field:'Field 2A'},
+  {id:3, date:'05/02', day:'Saturday, May 2',  time:'1:30 PM', arrive:'1:00 PM',
+   home:false, opp:'TR09A', loc:'Traer Fields', field:'TR09'},
+  {id:4, date:'05/09', day:'Saturday, May 9',  time:'12:00 PM',arrive:'11:30 AM',
+   home:false, opp:'HD09F', loc:'Cedar Valley Soccer Complex', field:'Field 2C'},
+  {id:5, date:'05/16', day:'Saturday, May 16', time:'4:30 PM', arrive:'4:00 PM',
+   home:true,  opp:'LC09B', loc:'Cedar Valley Soccer Complex', field:'Field 2B'},
+  {id:6, date:'05/30', day:'Saturday, May 30', time:'3:00 PM', arrive:'2:30 PM',
+   home:true,  opp:'CF09H', loc:'Cedar Valley Soccer Complex', field:'Field 2A'},
+];
+
+const ROSTER0 = ['Evan','Theo','Mateo','Beckem','Ronan','Jack','Nathan','Jacob'];
+const G1R = [
+  ['Evan','Theo','Mateo','Beckem'],
+  ['Nathan','Jacob','Jack','Ronan'],
+  ['Mateo','Beckem','Theo','Evan'],
+  ['Ronan','Nathan','Jacob','Jack'],
+  ['Beckem','Mateo','Evan','Theo'],
+  ['Jacob','Ronan','Jack','Nathan'],
+  ['Theo','Evan','Beckem','Mateo'],
+  ['Jack','Jacob','Nathan','Ronan'],
+];
+
+// ── Jersey helper ─────────────────────
+// Home = Gray, Away = Blue
+function jerseyColor(g) { return g.home ? 'gray' : 'blue'; }
+function jerseyLabel(g) { return g.home ? 'GRAY — Home' : 'BLUE — Away'; }
+
+// ══════════════════════════════════════
+// STATE
+// ══════════════════════════════════════
+function buildG1Stats(){
+  const ps={};
+  ROSTER0.forEach(p=>{ps[p]={gp:0,min:0,pos:{'Forward':0,'Mid (P)':0,'Mid (C)':0,'Defense':0}};});
+  G1R.forEach(r=>POS.forEach((pos,i)=>{const p=r[i];if(p&&ps[p]){ps[p].min+=5;ps[p].pos[pos]++;}}));
+  ROSTER0.forEach(p=>{if(ps[p].min>0)ps[p].gp=1;});
+  return ps;
+}
+function fresh(){
+  return {
+    roster:[...ROSTER0],ps:buildG1Stats(),
+    capLog:[{gid:1,caps:['Evan','Beckem']}],
+    games:{'1':{done:true,att:[...ROSTER0],rots:G1R,rpq:2,locked:true,score:[0,0],caps:['Evan','Beckem']}},
+    gid:2
+  };
+}
+function load(){try{const s=localStorage.getItem('thunder_v2');if(s)return JSON.parse(s);}catch(e){}return fresh();}
+function save(){localStorage.setItem('thunder_v2',JSON.stringify(S));}
+let S=load();
+
+// ══════════════════════════════════════
+// CAPTAINS
+// ══════════════════════════════════════
+function capCounts(){
+  const c={};S.roster.forEach(p=>c[p]=0);
+  (S.capLog||[]).forEach(({caps})=>caps.forEach(p=>{if(c[p]!==undefined)c[p]++;}));
+  return c;
+}
+function suggestCaps(gid){
+  const gd=S.games[String(gid)];
+  if(gd&&gd.caps&&gd.caps.length===2)return gd.caps;
+  const att=getAtt(gid);const cc=capCounts();
+  return [...att].map(p=>({p,c:cc[p]||0}))
+    .sort((a,b)=>a.c!==b.c?a.c-b.c:S.roster.indexOf(a.p)-S.roster.indexOf(b.p))
+    .slice(0,2).map(x=>x.p);
+}
+function getAtt(gid){const gd=S.games[String(gid)];return gd&&gd.att?gd.att:[...S.roster];}
+
+// ══════════════════════════════════════
+// PARENT EMAIL
+// ══════════════════════════════════════
+function buildEmail(gid){
+  const g=GAMES.find(x=>x.id===gid);
+  const gd=S.games[String(gid)]||{};
+  // Home=Gray, Away=Blue
+  const jersey=g.home?'GRAY':'BLUE';
+  const homeAway=g.home?`Home vs ${g.opp}`:`Away @ ${g.opp}`;
+  const caps=gd.caps||suggestCaps(gid);
+  return `Hello Thunder families,
+
+Quick note ahead of this week's game:
+
+Game: ${homeAway}
+Date: ${g.day}
+Location: ${g.loc} — ${g.field}
+Arrive by: ${g.arrive}
+Game time: ${g.time}
+Jerseys: Wear ${jersey}
+
+Captains for this game: ${caps.join(' and ')}.
+
+See you out there!
+Thanks, Mark`;
+}
+
+// ══════════════════════════════════════
+// ROTATION GENERATOR
+// ══════════════════════════════════════
+function perms4(){
+  const r=[];
+  for(let a=0;a<4;a++)for(let b=0;b<4;b++)if(b!==a)for(let c=0;c<4;c++)if(c!==a&&c!==b)for(let d=0;d<4;d++)if(d!==a&&d!==b&&d!==c)r.push([a,b,c,d]);
+  return r;
+}
+const PERMS4=perms4();
+
+function bestPos(players,gp,sp,prevFirst,randFn){
+  let best=null,bestScore=Infinity;
+  for(const perm of PERMS4){
+    let score=0;
+    for(let pi=0;pi<4;pi++){
+      const pos=POS[perm[pi]],p=players[pi];
+      if((gp[p]&&gp[p][pos])||0)score+=500;
+      score+=((sp[p]&&sp[p][pos])||0)*3;
+    }
+    if(prevFirst){let m=0;for(let pi=0;pi<4;pi++)if(prevFirst[perm[pi]]===players[pi])m++;score+=m*8;}
+    score+=randFn()*0.5;
+    if(score<bestScore){bestScore=score;best=perm;}
+  }
+  const rot=new Array(4);for(let pi=0;pi<4;pi++)rot[best[pi]]=players[pi];return rot;
+}
+
+function genRots(players,seasonStats,prevRots,seed){
+  const n=players.length,rpq=n>=7?2:3,total=4*rpq,totalSlots=total*4;
+  const sMins=players.map(p=>seasonStats[p]?.min||0),minS=Math.min(...sMins);
+  const invW=sMins.map(m=>1/(1+(m-minS)/10)),wSum=invW.reduce((a,b)=>a+b,0);
+  const raw=invW.map(w=>(w/wSum)*totalSlots),tgt=raw.map(x=>Math.floor(x));
+  let rem=totalSlots-tgt.reduce((a,b)=>a+b,0);
+  raw.map((x,i)=>({i,f:x-Math.floor(x)})).sort((a,b)=>b.f-a.f).forEach(({i},k)=>{if(k<rem)tgt[i]++;});
+  const tgtMap={};players.forEach((p,i)=>tgtMap[p]=tgt[i]);
+  const sp={};players.forEach(p=>{sp[p]={...((seasonStats[p]&&seasonStats[p].pos)||{'Forward':0,'Mid (P)':0,'Mid (C)':0,'Defense':0})};});
+  let rng=seed||42;const rand=()=>{rng=(rng*1664525+1013904223)&0xffffffff;return(rng>>>0)/4294967296;};
+  const rots=[],gpC={},used={};players.forEach(p=>{gpC[p]={};used[p]=0;});
+  for(let r=0;r<total;r++){
+    const left=total-r,must=players.filter(p=>(tgtMap[p]-used[p])>=left);
+    let onField=[...must];
+    if(onField.length>4)onField=onField.sort((a,b)=>(sMins[players.indexOf(a)])-(sMins[players.indexOf(b)])).slice(0,4);
+    if(onField.length<4){
+      const pool=players.filter(p=>!onField.includes(p)).sort((a,b)=>(tgtMap[b]-used[b])-(tgtMap[a]-used[a])||(sMins[players.indexOf(a)])-(sMins[players.indexOf(b)]));
+      while(onField.length<4&&pool.length)onField.push(pool.shift());
+    }
+    const rot=bestPos(onField,gpC,sp,r===0?prevRots?.[0]:null,rand);
+    rots.push(rot);
+    onField.forEach(p=>used[p]++);
+    POS.forEach((pos,i)=>{const p=rot[i];if(!p)return;if(!gpC[p])gpC[p]={};gpC[p][pos]=(gpC[p][pos]||0)+1;sp[p][pos]++;});
+  }
+  return{rots,rpq};
+}
+
+// ══════════════════════════════════════
+// PLAN PAGE
+// ══════════════════════════════════════
+function renderPlan(){
+  const g=GAMES.find(x=>x.id===S.gid);
+  const gd=S.games[String(S.gid)]||{};
+  const done=!!gd.done,locked=!!(gd.locked||done);
+  const jColor=jerseyColor(g); // 'gray' or 'blue'
+  const vs=g.home?`Home vs ${g.opp}`:`Away @ ${g.opp}`;
+
+  // Header
+  document.getElementById('planEyebrow').textContent=`Game ${S.gid} · ${g.date}`;
+  document.getElementById('planTitle').textContent=vs;
+  document.getElementById('planMeta').innerHTML=
+    `<span>${g.day}</span><span class="meta-sep">·</span><span>${g.time}</span><span class="meta-sep">·</span><span>${g.loc}</span><span class="meta-sep">·</span><span>${g.field}</span>`;
+  document.getElementById('hbadge').textContent=`Game ${S.gid} · ${g.date}`;
+  // Reset button — visible whenever this game has any data
+
+  // Jersey chip — Home=Gray, Away=Blue
+  const jIsAway=(jColor==='blue');
+  document.getElementById('jerseyBanner').innerHTML=jIsAway
+    ? `<div class="jersey-chip jersey-away no-print"><span class="j-dot j-dot-away"></span>Away Game — Wear BLUE</div>`
+    : `<div class="jersey-chip jersey-home no-print"><span class="j-dot j-dot-home"></span>Home Game — Wear GRAY</div>`;
+
+  renderCaps(locked||done);
+  renderAttGrid(locked||done);
+
+  const hasRot=!!(gd.rots&&gd.rots.length);
+  if(hasRot){
+    renderRot(gd.rots,gd.rpq||2,getAtt(S.gid),!locked);
+    checkAlerts(gd.rots,getAtt(S.gid));
+    document.getElementById('reshuffleBtn').style.display=locked?'none':'';
+    const lb=document.getElementById('lockBar');
+    lb.style.display=done?'none':'flex';
+    if(!done){
+      const lbtn=document.getElementById('lockBtn'),rbtn=document.getElementById('regenBtn');
+      if(locked){
+        lbtn.textContent='🔒 Locked';lbtn.className='btn btn-sm btn-lock-on';
+        rbtn.style.display='none';
+        document.getElementById('lockMsg').textContent='Plan is locked. Click to unlock and make changes.';
+      }else{
+        lbtn.textContent='🔓 Lock Plan';lbtn.className='btn btn-sm btn-lock-off';
+        rbtn.style.display='';
+        document.getElementById('lockMsg').textContent='Plan unlocked — edit cells, reshuffle, or lock when ready.';
+      }
+    }
+    document.getElementById('doneCard').style.display=locked&&!done?'block':'none';
+    if(locked&&!done)renderScoreEntry();
+    if(done){renderScoreDone(gd.score);showAlerts([{t:'a-ok',msg:`Game ${S.gid} complete — ${vs}. Score: Thunder ${gd.score?gd.score[0]:'?'} – ${gd.score?gd.score[1]:'?'}.`}]);}
+    renderEmailCard();
+    document.getElementById('emailCard').style.display='block';
+  }else{
+    document.getElementById('rotArea').innerHTML='';
+    document.getElementById('lockBar').style.display='none';
+    document.getElementById('doneCard').style.display='none';
+    document.getElementById('emailCard').style.display='none';
+    document.getElementById('alertBox').innerHTML='';
+    document.getElementById('reshuffleBtn').style.display='none';
+  }
+}
+
+function renderScoreEntry(){
+  document.getElementById('scoreDisplay').innerHTML=`
+    <div class="score-row">
+      <div><label>Thunder Score</label><input type="number" id="scoreUs" class="score-in" min="0" value="0"></div>
+      <div style="font-size:24px;font-weight:500;color:var(--text-secondary);padding-bottom:8px;align-self:flex-end">–</div>
+      <div><label>Opponent Score</label><input type="number" id="scoreThem" class="score-in" min="0" value="0"></div>
+      <div style="align-self:flex-end;padding-bottom:2px"><button class="btn btn-primary btn-sm" onclick="markDone()">Mark Game Done</button></div>
+    </div>
+    <div class="xs muted">Marks game as complete and saves season stats.</div>`;
+}
+
+function renderScoreDone(score){
+  const sc=score||[0,0];
+  document.getElementById('doneCard').style.display='block';
+  document.getElementById('scoreDisplay').innerHTML=`
+    <div class="flex gap16 wrap" style="align-items:center;margin-bottom:16px">
+      <div class="score-display">THUNDER ${sc[0]} – ${sc[1]}</div>
+      <button class="btn btn-ghost btn-sm" onclick="editScore()">Edit Score</button>
+    </div>
+    <div style="border-top:1px solid var(--grey-200);padding-top:16px;margin-top:4px">
+      <div class="xs muted mb8">Need to undo this game? The reset below removes the rotation, score, and captain record for this game. Note that season stats (minutes and position counts) already recorded when you marked this game done are <strong>not reversed</strong> — see the info below.</div>
+      <button class="btn btn-danger btn-sm" onclick="resetGamePlan()">Reset Game Plan</button>
+    </div>`;
+}
+
+function editScore(){
+  const gd=S.games[String(S.gid)];if(!gd)return;const sc=gd.score||[0,0];
+  document.getElementById('scoreDisplay').innerHTML=`
+    <div class="score-row">
+      <div><label>Thunder Score</label><input type="number" id="scoreUs" class="score-in" min="0" value="${sc[0]}"></div>
+      <div style="font-size:24px;font-weight:500;color:var(--text-secondary);padding-bottom:8px;align-self:flex-end">–</div>
+      <div><label>Opponent Score</label><input type="number" id="scoreThem" class="score-in" min="0" value="${sc[1]}"></div>
+      <div style="align-self:flex-end;padding-bottom:2px;display:flex;gap:8px">
+        <button class="btn btn-primary btn-sm" onclick="saveScore()">Save</button>
+        <button class="btn btn-secondary btn-sm" onclick="renderScoreDone(S.games[String(S.gid)]?.score)">Cancel</button>
+      </div>
+    </div>`;
+}
+
+function saveScore(){
+  const gd=S.games[String(S.gid)];if(!gd)return;
+  gd.score=[parseInt(document.getElementById('scoreUs').value)||0,parseInt(document.getElementById('scoreThem').value)||0];
+  save();renderScoreDone(gd.score);
+}
+
+function renderEmailCard(){
+  document.getElementById('emailBody').textContent=buildEmail(S.gid);
+}
+function copyEmail(){
+  const txt=document.getElementById('emailBody').textContent;
+  navigator.clipboard.writeText(txt).then(()=>showToast('Email copied to clipboard'));
+}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+
+// ── Captains ───────────────────────────
+function renderCaps(locked){
+  const gd=S.games[String(S.gid)]||{},assigned=!!gd.caps,done=!!gd.done;
+  const cc=capCounts();
+  const div=document.getElementById('capArea');
+  const att=getAtt(S.gid);
+  if(!att.length){div.innerHTML='<div class="sm muted">Mark attendance first.</div>';return;}
+
+  if(done||locked){
+    // Read-only: just show who was assigned
+    const caps=gd.caps||suggestCaps(S.gid);
+    document.getElementById('capNote').textContent='Assigned';
+    document.getElementById('capNote').className='badge badge-green';
+    div.innerHTML=`
+      <div class="cap-row">
+        ${caps.map(p=>`<div class="cap-chip"><span class="star">⭐</span>${p} <span class="badge" style="font-size:10px">${cc[p]||0}× cap</span></div>`).join('')}
+      </div>
+      <div class="xs muted">Game 1: Evan & Beckem. Rotates so everyone leads before anyone repeats.</div>`;
+    return;
+  }
+
+  // Editable: show picker — each player is a toggleable button, select exactly 2
+  const suggested=suggestCaps(S.gid);
+  // Current working selection: use assigned caps if set, else suggestion
+  const current=assigned?[...gd.caps]:[...suggested];
+
+  document.getElementById('capNote').textContent=assigned?'Assigned':'Suggested — tap to change';
+  document.getElementById('capNote').className='badge '+(assigned?'badge-green':'badge-warn');
+
+  div.innerHTML=`
+    <div class="xs muted mb8">Select 2 captains. ⭐ = suggested based on fewest prior turns.</div>
+    <div class="att-grid" id="capPickerGrid" style="margin-bottom:12px"></div>
+    <div class="flex gap8 wrap" id="capActions"></div>
+    <div class="xs muted mt8">Game 1: Evan & Beckem. Rotates so everyone leads before anyone repeats.</div>`;
+
+  renderCapPicker(att, current, suggested, cc);
+}
+
+function renderCapPicker(att, selected, suggested, cc){
+  const grid=document.getElementById('capPickerGrid');
+  if(!grid)return;
+  grid.innerHTML=att.map(p=>{
+    const isSel=selected.includes(p);
+    const isSug=suggested.includes(p);
+    const count=cc[p]||0;
+    return`<div class="att-btn ${isSel?'yes':''}" onclick="toggleCapPick('${p}')" style="position:relative">
+      ${isSug?'<span style="position:absolute;top:3px;right:5px;font-size:9px;color:var(--bolt)">⭐</span>':''}
+      <div style="font-weight:500">${p}</div>
+      <div style="font-size:10px;color:${isSel?'rgba(255,255,255,.7)':'var(--text-secondary)'};">${count}× cap</div>
+    </div>`;
+  }).join('');
+
+  const actions=document.getElementById('capActions');
+  if(!actions)return;
+  if(selected.length===2){
+    actions.innerHTML=`
+      <button class="btn btn-primary btn-sm" onclick="confirmCapsFromPicker()">✓ Confirm ${selected.join(' & ')}</button>
+      <button class="btn btn-secondary btn-sm" onclick="resetCapPicker()">Reset to Suggested</button>`;
+  }else{
+    actions.innerHTML=`<div class="sm muted" style="padding:6px 0">Select ${2-selected.length} more player${selected.length===1?'':'s'}</div>`;
+  }
+}
+
+// Temporary selection state (not persisted until Confirm)
+let _capPickerSelection = null;
+
+function toggleCapPick(p){
+  const att=getAtt(S.gid);
+  const gd=S.games[String(S.gid)]||{};
+  const cc=capCounts();
+  const suggested=suggestCaps(S.gid);
+  if(!_capPickerSelection){
+    // Initialize from current state
+    _capPickerSelection=gd.caps?[...gd.caps]:[...suggested];
+  }
+  if(_capPickerSelection.includes(p)){
+    _capPickerSelection=_capPickerSelection.filter(x=>x!==p);
+  }else{
+    if(_capPickerSelection.length>=2) _capPickerSelection.shift(); // replace oldest
+    _capPickerSelection.push(p);
+  }
+  renderCapPicker(att, _capPickerSelection, suggested, cc);
+}
+
+function resetCapPicker(){
+  _capPickerSelection=null;
+  const att=getAtt(S.gid);
+  const cc=capCounts();
+  const suggested=suggestCaps(S.gid);
+  renderCapPicker(att, suggested, suggested, cc);
+}
+
+function confirmCapsFromPicker(){
+  if(!_capPickerSelection||_capPickerSelection.length!==2)return;
+  const caps=[..._capPickerSelection];
+  _capPickerSelection=null;
+  S.games[String(S.gid)]=S.games[String(S.gid)]||{};
+  S.games[String(S.gid)].caps=caps;
+  S.capLog=S.capLog.filter(x=>x.gid!==S.gid);
+  S.capLog.push({gid:S.gid,caps});
+  save();renderCaps(false);
+  if(document.getElementById('emailBody'))renderEmailCard();
+}
+
+function confirmCaps(caps){
+  // Legacy — keep for safety
+  S.games[String(S.gid)]=S.games[String(S.gid)]||{};S.games[String(S.gid)].caps=caps;
+  if(!S.capLog.find(x=>x.gid===S.gid))S.capLog.push({gid:S.gid,caps});
+  save();renderCaps(false);if(document.getElementById('emailBody'))renderEmailCard();
+}
+function reassignCaps(){
+  const gd=S.games[String(S.gid)];
+  if(gd){delete gd.caps;S.capLog=S.capLog.filter(x=>x.gid!==S.gid);}
+  _capPickerSelection=null;
+  save();renderCaps(false);
+}
+
+// ── Attendance ─────────────────────────
+function renderAttGrid(locked){
+  const att=getAtt(S.gid);
+  document.getElementById('attGrid').innerHTML=S.roster.map(p=>
+    `<div class="att-btn ${att.includes(p)?'yes':'no'}" ${locked?'':'onclick="toggleAtt(\''+p+'\')"'}>${p}</div>`).join('');
+  document.getElementById('attBadge').textContent=`${att.length}/${S.roster.length}`;
+  document.getElementById('attBadge').className='badge '+(att.length>=7?'badge-green':att.length>=5?'badge-warn':'badge-red');
+}
+function toggleAtt(p){
+  const gd=S.games[String(S.gid)]=S.games[String(S.gid)]||{};
+  let att=getAtt(S.gid);
+  if(att.includes(p)){if(att.length>4)att=att.filter(x=>x!==p);}else att.push(p);
+  gd.att=S.roster.filter(x=>att.includes(x));
+  if(gd.rots&&!gd.locked)delete gd.rots;
+  save();renderPlan();
+}
+function allPresent(){const gd=S.games[String(S.gid)]=S.games[String(S.gid)]||{};gd.att=[...S.roster];save();renderAttGrid(false);}
+
+// ── Generate ───────────────────────────
+function doGenerate(seedOverride){
+  const att=getAtt(S.gid);if(att.length<4){showAlerts([{t:'a-warn',msg:'Need at least 4 players.'}]);return;}
+  const prev=S.games[String(S.gid-1)]?.rots||null;
+  const seed=seedOverride||(Math.floor(Math.random()*1e9)+1);
+  const{rots,rpq}=genRots(att,S.ps,prev,seed);
+  const gd=S.games[String(S.gid)]=S.games[String(S.gid)]||{};
+  gd.rots=rots;gd.rpq=rpq;gd.locked=false;gd._seed=seed;
+  save();renderPlan();
+}
+function doReshuffle(){const gd=S.games[String(S.gid)];doGenerate(((gd?._seed||42)+Math.floor(Math.random()*9999)+1)&0xffffffff);}
+function toggleLock(){const gd=S.games[String(S.gid)];if(!gd?.rots)return;gd.locked=!gd.locked;save();renderPlan();}
+function markDone(){
+  const gd=S.games[String(S.gid)];if(!gd?.rots)return;
+  if(!gd.locked){showAlerts([{t:'a-warn',msg:'Lock the plan first.'}]);return;}
+  if(gd.done)return;
+  gd.score=[parseInt(document.getElementById('scoreUs').value)||0,parseInt(document.getElementById('scoreThem').value)||0];
+  gd.done=true;
+  const att=getAtt(S.gid);
+  gd.rots.forEach(rot=>{POS.forEach((pos,i)=>{const p=rot[i];if(!p)return;if(!S.ps[p])S.ps[p]={gp:0,min:0,pos:{'Forward':0,'Mid (P)':0,'Mid (C)':0,'Defense':0}};S.ps[p].min+=5;S.ps[p].pos[pos]++;});});
+  att.forEach(p=>{if(S.ps[p])S.ps[p].gp++;});
+  if(!gd.caps){const caps=suggestCaps(S.gid);gd.caps=caps;if(!S.capLog.find(x=>x.gid===S.gid))S.capLog.push({gid:S.gid,caps});}
+  save();renderPlan();
+}
+
+// ── Rotation table ─────────────────────
+function renderRot(rots,rpq,att,editable){
+  const QN=['Q1','Q2','Q3','Q4'];
+  let html='';
+  for(let q=0;q<4;q++){
+    html+=`<div class="rot-block">
+      <div class="rot-qhead"><span>${QN[q]}</span><span class="qtime">0:00 – 10:00 (resets each quarter)</span></div>
+      <table class="rot-tbl"><thead><tr><th>Position</th>`;
+    for(let r=0;r<rpq;r++){
+      const mS=r*Math.floor(10/rpq),mE=(r+1)*Math.floor(10/rpq);
+      html+=`<th>${r===0?'First':'Second'} &nbsp;<span style="font-weight:400;font-size:10px">${mS}:00–${mE}:00</span></th>`;
+    }
+    html+=`</tr></thead><tbody>`;
+    POS.forEach((pos,pi)=>{
+      html+=`<tr><td>${PLBL[pos]}</td>`;
+      for(let r=0;r<rpq;r++){
+        const ri=q*rpq+r,rot=rots[ri]||[],p=rot[pi]||'—',cls=PCLS[pos];
+        html+=editable
+          ?`<td class="${cls} editable" id="c${ri}_${pi}" onclick="openDrop(event,${ri},${pi})">${p}</td>`
+          :`<td class="${cls}">${p}</td>`;
+      }
+      html+=`</tr>`;
+    });
+    html+=`<tr><td class="cout" style="font-style:italic">Out</td>`;
+    for(let r=0;r<rpq;r++){
+      const ri=q*rpq+r,rot=rots[ri]||[],out=att.filter(p=>!rot.includes(p));
+      html+=`<td class="cout">${out.join(', ')||'—'}</td>`;
+    }
+    html+=`</tr></tbody></table></div>`;
+  }
+  document.getElementById('rotArea').innerHTML=html;
+}
+
+// ── Cell editor ────────────────────────
+let dropTarget=null;
+function openDrop(e,ri,pi){
+  e.stopPropagation();closeDrop();
+  const gd=S.games[String(S.gid)];if(!gd?.rots)return;
+  const rot=gd.rots[ri],att=getAtt(S.gid),cur=rot[pi];
+  dropTarget={ri,pi};
+  const drop=document.getElementById('cellDrop');
+  drop.innerHTML=att.map(p=>`<div class="${p===cur?'curr':''}" onclick="setCellPlayer('${p}')">${p}${rot.includes(p)&&p!==cur?' ↔':p===cur?' ✓':''}</div>`).join('');
+  const cell=document.getElementById(`c${ri}_${pi}`),rect=cell.getBoundingClientRect();
+  drop.style.left=rect.left+'px';drop.style.top=(rect.bottom+window.scrollY)+'px';drop.style.display='block';
+}
+function setCellPlayer(np){
+  const{ri,pi}=dropTarget;const gd=S.games[String(S.gid)];const rot=gd.rots[ri];const op=rot[pi];
+  if(op===np){closeDrop();return;}
+  const oi=rot.indexOf(np);if(oi>=0)rot[oi]=op;rot[pi]=np;
+  closeDrop();save();renderRot(gd.rots,gd.rpq||2,getAtt(S.gid),true);checkAlerts(gd.rots,getAtt(S.gid));
+}
+function closeDrop(){document.getElementById('cellDrop').style.display='none';dropTarget=null;}
+document.addEventListener('click',closeDrop);
+
+// ── Alerts ─────────────────────────────
+function checkAlerts(rots,att){
+  const al=[];const gpc={};att.forEach(p=>gpc[p]={});
+  rots.forEach(r=>{if(!r)return;POS.forEach((pos,i)=>{const p=r[i];if(!p)return;if(!gpc[p])gpc[p]={};gpc[p][pos]=(gpc[p][pos]||0)+1;});});
+  const rep=[];att.forEach(p=>POS.forEach(pos=>{if((gpc[p]?.[pos]||0)>1)rep.push(`${p} → ${pos}`);}));
+  if(rep.length)al.push({t:'a-warn',msg:'Position repeats this game: '+rep.join(', ')});
+  const mins={};att.forEach(p=>{let m=0;rots.forEach(r=>{if(r&&r.includes(p))m+=5;});mins[p]=m;});
+  const lo=Math.min(...Object.values(mins)),hi=Math.max(...Object.values(mins));
+  if(hi-lo<=5)al.push({t:'a-ok',msg:`Playing time balanced: ${lo}–${hi} min per player.`});
+  else if(hi-lo>10)al.push({t:'a-warn',msg:`Playing time spread: ${lo}–${hi} min. Check distribution.`});
+  showAlerts(al);
+}
+function showAlerts(al){
+  document.getElementById('alertBox').innerHTML=al.map(a=>`<div class="alert ${a.t}"><span>${a.t==='a-ok'?'✓':'⚠'}</span><span>${a.msg}</span></div>`).join('');
+}
+
+// ── Nav ────────────────────────────────
+function prevG(){if(S.gid>1){S.gid--;save();renderPlan();}}
+function nextG(){if(S.gid<6){S.gid++;save();renderPlan();}}
+function goToGame(id){S.gid=id;S.games[String(id)]=S.games[String(id)]||{};save();nav('plan');}
+function nav(name,tabEl){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('page-'+name).classList.add('on');
+  if(tabEl)tabEl.classList.add('on');
+  else document.querySelectorAll('.tab').forEach(t=>{if(t.getAttribute('onclick')?.includes("'"+name+"'"))t.classList.add('on');});
+  if(name==='plan')renderPlan();
+  if(name==='season')renderSeason();
+  if(name==='print'){populatePrintSel();renderPrint();}
+  if(name==='schedule')renderSchedule();
+  if(name==='roster')renderRoster();
+}
+
+// ══════════════════════════════════════
+// SEASON PAGE
+// ══════════════════════════════════════
+function renderSeason(){
+  const dc=Object.values(S.games).filter(g=>g.done).length;
+  document.getElementById('seasonSum').innerHTML=`
+    <div style="min-width:100px"><div class="xs muted" style="text-transform:uppercase;letter-spacing:.06em;font-weight:500">Games Played</div><div style="font-size:28px;font-weight:500;font-family:var(--font-mono)">${dc}/6</div></div>
+    <div style="min-width:100px"><div class="xs muted" style="text-transform:uppercase;letter-spacing:.06em;font-weight:500">Next Game</div><div style="font-size:28px;font-weight:500;font-family:var(--font-mono)">${GAMES.find(g=>!S.games[String(g.id)]?.done)?.date||'Done!'}</div></div>
+    <div style="min-width:100px"><div class="xs muted" style="text-transform:uppercase;letter-spacing:.06em;font-weight:500">Roster</div><div style="font-size:28px;font-weight:500;font-family:var(--font-mono)">${S.roster.length}</div></div>`;
+  const allM=S.roster.map(p=>S.ps[p]?.min||0),loM=Math.min(...allM),hiM=Math.max(...allM);
+  const sal=[];
+  if(hiM-loM>15){const beh=S.roster.filter(p=>(S.ps[p]?.min||0)===loM).join(', ');sal.push({t:'a-warn',msg:`${beh} ha${beh.includes(',')?'ve':'s'} the fewest minutes (${loM}). Will be prioritized in upcoming rotations.`});}
+  document.getElementById('statsAlerts').innerHTML=sal.map(a=>`<div class="alert ${a.t}"><span>⚠</span><span>${a.msg}</span></div>`).join('');
+  const cc=capCounts();
+  document.getElementById('statsBody').innerHTML=S.roster.map(p=>{
+    const st=S.ps[p]||{gp:0,min:0,pos:{'Forward':0,'Mid (P)':0,'Mid (C)':0,'Defense':0}};
+    const avg=st.gp?(st.min/st.gp).toFixed(1):'—';
+    const pv=POS.map(pos=>st.pos[pos]||0);const maxP=Math.max(...pv);
+    const pips=POS.map((pos,i)=>{const v=pv[i];const ov=dc>1&&v>0&&v>=maxP&&maxP>2;return`<span class="pip ${PPIP[pos]} ${ov?'hi':''}" title="${pos}: ${v}">${v}</span>`;}).join('');
+    const mc=cc[p]||0;
+    return`<tr><td>${p}</td><td>${st.gp}</td>
+      <td><span class="badge ${st.min<dc*15?'badge-red':st.min<dc*18?'badge-warn':'badge-green'}">${st.min} min</span></td>
+      <td>${avg}</td><td>${pv[0]}</td><td>${pv[1]}</td><td>${pv[2]}</td><td>${pv[3]}</td>
+      <td><span class="badge ${mc>=2?'badge-warn':'badge-green'}">${mc}×</span></td>
+      <td><div class="pips">${pips}</div></td></tr>`;
+  }).join('');
+  const maxM=Math.max(...allM,1);
+  document.getElementById('equityBars').innerHTML=S.roster.map((p,i)=>{const m=allM[i];return`
+    <div class="eq-row"><div class="eq-name">${p}</div>
+      <div class="eq-track"><div class="eq-fill" style="width:${(m/maxM*100).toFixed(1)}%"></div></div>
+      <div class="eq-val">${m} min</div>
+    </div>`;}).join('');
+  document.getElementById('capSeason').innerHTML=S.roster.map(p=>{const c=capCounts()[p]||0;return`
+    <div class="cap-cell"><div class="cn">${p}</div><div class="cc">${c}× cap</div></div>`;}).join('');
+}
+
+// ══════════════════════════════════════
+// PRINT PAGE — spreadsheet grid, B&W
+// ══════════════════════════════════════
+function populatePrintSel(){
+  const sel=document.getElementById('printSel'),cur=sel.value;
+  sel.innerHTML='<option value="">Choose…</option>'+GAMES.map(g=>{
+    const has=!!S.games[String(g.id)]?.rots;
+    return`<option value="${g.id}" ${cur==g.id?'selected':''} ${!has?'disabled':''}>Game ${g.id} — ${g.date} ${g.home?'vs':'@'} ${g.opp}${has?'':' (no rotation)'}</option>`;
+  }).join('');
+}
+
+function renderPrint(){
+  const sel=document.getElementById('printSel'),gid=parseInt(sel.value);if(!gid)return;
+  const g=GAMES.find(x=>x.id===gid),gd=S.games[String(gid)];
+  if(!gd?.rots){document.getElementById('printArea').innerHTML='<div class="muted sm" style="padding:24px 0">No rotation for this game yet.</div>';return;}
+  const rots=gd.rots,rpq=gd.rpq||2,att=getAtt(gid),caps=gd.caps||[];
+  // Home=Gray, Away=Blue
+  const jersey=g.home?'GRAY':'BLUE';
+  const vs=g.home?`HOME vs ${g.opp}`:`AWAY @ ${g.opp}`;
+  const QN=['Q1','Q2','Q3','Q4'];
+  const totalCols=4*rpq;
+
+  function buildCopy(n){
+    // Header
+    let h=`<div class="print-copy-card">
+      <div class="pc-header">
+        <div class="pc-title">⚡ THUNDER &nbsp;·&nbsp; Game ${gid} &nbsp;·&nbsp; ${g.date}</div>
+        <div class="pc-meta">${vs} &nbsp;·&nbsp; ${g.loc} ${g.field} &nbsp;·&nbsp; Arrive: ${g.arrive} &nbsp;·&nbsp; Kickoff: ${g.time} &nbsp;·&nbsp; Jersey: <strong>${jersey}</strong></div>`;
+    if(caps.length)h+=`<div class="pc-meta">Captains: <strong>${caps.join(' & ')}</strong></div>`;
+    if(gd.score)h+=`<div class="pc-meta">Score: <strong>Thunder ${gd.score[0]} – ${gd.score[1]} ${g.opp}</strong></div>`;
+    h+=`<div style="font-size:8pt;color:#aaa">Copy ${n} of 3</div></div>`;
+
+    // Table — q-start class marks first column of each quarter for thick left border
+    h+=`<table class="pc-table"><thead><tr><th>Position</th>`;
+    for(let q=0;q<4;q++){
+      for(let r=0;r<rpq;r++){
+        const mS=r*Math.floor(10/rpq),mE=(r+1)*Math.floor(10/rpq);
+        const qStart=(r===0)?'q-start':'';
+        h+=`<th class="${qStart}">${QN[q]}<br><span style="font-weight:400">${mS}–${mE}'</span></th>`;
+      }
+    }
+    h+=`</tr></thead><tbody>`;
+    POS.forEach((pos,pi)=>{
+      h+=`<tr><td>${PLBL[pos]}</td>`;
+      for(let q=0;q<4;q++){for(let r=0;r<rpq;r++){
+        const ri=q*rpq+r,rot=rots[ri]||[],qStart=(r===0)?'q-start':'';
+        h+=`<td class="player-name ${qStart}">${rot[pi]||'—'}</td>`;
+      }}
+      h+=`</tr>`;
+    });
+    // Out row
+    h+=`<tr class="out-row"><td>Out</td>`;
+    for(let q=0;q<4;q++){for(let r=0;r<rpq;r++){
+      const ri=q*rpq+r,rot=rots[ri]||[],out=att.filter(p=>!rot.includes(p));
+      const qStart=(r===0)?'q-start':'';
+      h+=`<td class="${qStart}">${out.join(', ')||'—'}</td>`;
+    }}
+    h+=`</tr></tbody></table></div>`;
+    return h;
+  }
+
+  document.getElementById('printArea').innerHTML=`
+    <div class="no-print xs muted mb16">Preview — ${totalCols} rotation columns (${4} quarters × ${rpq} rotations each). Three identical copies for coaches.</div>
+    <div class="print-copies" style="display:grid;gap:16px">${buildCopy(1)}${buildCopy(2)}${buildCopy(3)}</div>`;
+}
+
+// ══════════════════════════════════════
+// SCHEDULE PAGE
+// ══════════════════════════════════════
+function renderSchedule(){
+  const nid=GAMES.find(g=>!S.games[String(g.id)]?.done)?.id;
+  document.getElementById('schedGrid').innerHTML=GAMES.map(g=>{
+    const gd=S.games[String(g.id)]||{},done=!!gd.done,isN=g.id===nid;
+    // Home=Gray, Away=Blue
+    const jColor=jerseyColor(g); // 'gray' or 'blue'
+    const jIsAway=(jColor==='blue');
+    const jLabel=jIsAway?'Blue — Away':'Gray — Home';
+    const jDotColor=jIsAway?'#1A5FB4':'#707072';
+    const vs=g.home?`Home vs ${g.opp}`:`Away @ ${g.opp}`;
+    return`<div class="sc ${done?'done':isN?'next':''}" onclick="goToGame(${g.id})">
+      <div class="gnum">Game ${g.id}</div>
+      <div class="gdate">${g.date}</div>
+      <div class="gtime">${g.time}</div>
+      <div class="gvs">${vs}</div>
+      <div class="gloc">${g.loc} · ${g.field}</div>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+        <span style="width:10px;height:10px;border-radius:50%;background:${jDotColor};display:inline-block;flex-shrink:0"></span>
+        <span style="font-size:12px;font-weight:500;color:${jDotColor}">${jLabel}</span>
+      </div>
+      <div class="gstatus ${done?'std':isN?'stn':'stu'}">${done?'Done':isN?'Up Next':'Upcoming'}</div>
+      ${gd.rots?`<div style="font-size:11px;color:var(--green);margin-top:6px">✓ Rotation${gd.locked?' 🔒':''}</div>`:''}
+      ${gd.score&&done?`<div class="mono xs muted" style="margin-top:4px">${gd.score[0]}–${gd.score[1]}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════
+// ROSTER PAGE
+// ══════════════════════════════════════
+function renderRoster(){
+  document.getElementById('rosterList').innerHTML=
+    `<div class="roster-chips">` +
+    S.roster.map(p=>`<div class="roster-chip">${p}<button onclick="removePlayer('${p}')">✕</button></div>`).join('')+`</div>`;
+}
+function addPlayer(){
+  const i=document.getElementById('newName'),n=i.value.trim();
+  if(!n||S.roster.includes(n))return;
+  S.roster.push(n);
+  if(!S.ps[n])S.ps[n]={gp:0,min:0,pos:{'Forward':0,'Mid (P)':0,'Mid (C)':0,'Defense':0}};
+  i.value='';save();renderRoster();
+}
+function removePlayer(name){
+  if(!confirm(`Remove ${name}? Stats remain saved.`))return;
+  S.roster=S.roster.filter(p=>p!==name);save();renderRoster();
+}
+
+// ══════════════════════════════════════
+// DATA
+// ══════════════════════════════════════
+function exportData(){
+  const b=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);
+  a.download=`thunder-${new Date().toISOString().slice(0,10)}.json`;a.click();
+}
+function importData(){
+  const i=document.createElement('input');i.type='file';i.accept='.json';
+  i.onchange=e=>{const r=new FileReader();r.onload=ev=>{try{const d=JSON.parse(ev.target.result);if(confirm('Replace all data?')){S=d;save();location.reload();}}catch(e){alert('Invalid JSON');}};r.readAsText(e.target.files[0]);};i.click();
+}
+function resetAll(){if(confirm('Reset ALL data?')){localStorage.removeItem('thunder_v2');S=fresh();save();location.reload();}}
+function resetGamePlan(){
+  const gd=S.games[String(S.gid)];
+  const isDone=!!(gd&&gd.done);
+  if(isDone){
+    const ok=confirm(
+      "Warning: Game " + S.gid + " has already been marked done.\n\n" +
+      "What WILL be removed:\n" +
+      "  • The rotation plan\n" +
+      "  • The final score\n" +
+      "  • The captain assignment\n\n" +
+      "What will NOT change:\n" +
+      "  • Each player\'s minute totals on the Season Stats page\n" +
+      "  • Each player\'s position counts (FWD, Mid-P, Mid-C, DEF)\n" +
+      "  • Each player\'s games-played count\n\n" +
+      "Those stats were written when you hit \"Mark Game Done\" and are not reversed here. " +
+      "If you need to correct them, use the Season Stats page or re-export/edit your JSON backup.\n\n" +
+      "Reset anyway?"
+    );
+    if(!ok)return;
+  }else{
+    const ok=confirm("Reset Game " + S.gid + " plan?\n\nThis will clear the rotation, attendance, captains, and lock state. No season stats are affected since this game was never marked done.");
+    if(!ok)return;
+  }
+  if(gd){
+    delete gd.rots;
+    delete gd.rpq;
+    delete gd._seed;
+    delete gd.locked;
+    delete gd.caps;
+    delete gd.score;
+    delete gd.done;
+  }
+  S.capLog=S.capLog.filter(x=>x.gid!==S.gid);
+  _capPickerSelection=null;
+  save();renderPlan();
+}
+
+// ══════════════════════════════════════
+// INIT
+// ══════════════════════════════════════
+S.roster.forEach(p=>{if(!S.ps[p])S.ps[p]={gp:0,min:0,pos:{'Forward':0,'Mid (P)':0,'Mid (C)':0,'Defense':0}};});
+if(!S.games['1'])S.games['1']={done:true,att:[...ROSTER0],rots:G1R,rpq:2,locked:true,score:[0,0],caps:['Evan','Beckem']};
+if(!S.capLog||!S.capLog.length)S.capLog=[{gid:1,caps:['Evan','Beckem']}];
+if(!S.gid)S.gid=2;
+renderPlan();
+</script>
+</body>
+</html>
