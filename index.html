@@ -158,6 +158,8 @@ header {
   text-transform: uppercase;
   font-size: 13px;
   letter-spacing: 0.04em;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 .tab:hover { color: var(--black); }
 .tab.on { color: var(--black); border-bottom-color: var(--black); }
@@ -237,6 +239,8 @@ header {
   white-space: nowrap;
   letter-spacing: 0.01em;
   line-height: 1.5;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 .btn-primary {
   background: var(--black);
@@ -373,6 +377,8 @@ header {
   color: var(--text-primary);
   user-select: none;
   font-family: var(--font-body);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 .att-btn:hover { border-color: var(--border-primary); }
 .att-btn.yes {
@@ -439,7 +445,7 @@ header {
 .cmc  { background: var(--pos-mc-bg);  color: var(--pos-mc-fg);  }
 .cdef { background: var(--pos-def-bg); color: var(--pos-def-fg); }
 .cout { color: var(--text-secondary); font-style: italic; font-size: 12px; font-weight: 400; }
-.editable { cursor: pointer; }
+.editable { cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 .editable:hover { outline: 2px solid var(--black); outline-offset: -2px; }
 
 /* ── LOCK BAR ── */
@@ -585,6 +591,8 @@ header {
   padding: 24px;
   cursor: pointer;
   transition: background 0.15s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 .sc:hover { background: var(--grey-50); }
 .sc.next { background: var(--grey-50); }
@@ -809,6 +817,41 @@ hr { border: none; border-top: 1px solid var(--grey-200); margin: 24px 0; }
 }
 .toast.show { opacity: 1; }
 
+/* ── PHONE SCREENSHOT OVERLAY ── */
+.phone-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: #fff;
+  z-index: 900;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.phone-overlay.open { display: block; }
+.phone-overlay-bar {
+  position: sticky;
+  top: 0;
+  background: var(--black);
+  color: var(--white);
+  padding: 14px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 1;
+}
+.phone-overlay-bar span { font-size: 14px; font-weight: 500; }
+.phone-overlay-bar button {
+  background: none;
+  border: none;
+  color: var(--white);
+  font-size: 22px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
 @media (max-width: 768px) {
   header { padding: 0 16px; }
   .tabs { padding: 0 16px; }
@@ -817,6 +860,7 @@ hr { border: none; border-top: 1px solid var(--grey-200); margin: 24px 0; }
   .att-grid { grid-template-columns: repeat(4, 1fr); }
   .sched-grid { grid-template-columns: repeat(2, 1fr); }
   .print-copies { grid-template-columns: 1fr; }
+  .rot-block { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 }
 </style>
 </head>
@@ -957,6 +1001,7 @@ hr { border: none; border-top: 1px solid var(--grey-200); margin: 24px 0; }
       <select id="printSel" onchange="renderPrint()"><option value="">Choose…</option></select>
     </div>
     <button class="btn btn-primary" onclick="window.print()" style="margin-top:22px">Print →</button>
+    <button id="phoneViewBtn" class="btn btn-secondary" onclick="openPhoneView()" style="margin-top:22px;display:none">📱 Screenshot View</button>
   </div>
   <div id="printArea"><div class="muted sm" style="padding:24px 0">Select a game above to preview the print sheet.</div></div>
 </div>
@@ -1000,6 +1045,15 @@ hr { border: none; border-top: 1px solid var(--grey-200); margin: 24px 0; }
 <div id="cellDrop" class="cell-drop" style="display:none"></div>
 <!-- Toast -->
 <div id="toast" class="toast">Copied!</div>
+<!-- Phone Screenshot Overlay -->
+<div id="phoneOverlay" class="phone-overlay">
+  <div class="phone-overlay-bar">
+    <span>📱 Screenshot View</span>
+    <button onclick="closePhoneView()">✕</button>
+  </div>
+  <div style="text-align:center;padding:8px 16px 4px;font-size:12px;color:#666">Scroll to view the full lineup, then screenshot to save.</div>
+  <div id="phoneViewContent" style="padding:0 8px 40px"></div>
+</div>
 
 <script>
 // ══════════════════════════════════════
@@ -1290,7 +1344,7 @@ function renderPlan(){
   const hasRot=!!(gd.rots&&gd.rots.length);
   if(hasRot){
     renderRot(gd.rots,gd.rpq||2,getAtt(S.gid),!locked);
-    checkAlerts(gd.rots,getAtt(S.gid));
+    checkAlerts(gd.rots,getAtt(S.gid),gd.rpq||2);
     document.getElementById('reshuffleBtn').style.display=locked?'none':'';
     const lb=document.getElementById('lockBar');
     lb.style.display=done?'none':'flex';
@@ -1531,7 +1585,8 @@ function markDone(){
   gd.score=[parseInt(document.getElementById('scoreUs').value)||0,parseInt(document.getElementById('scoreThem').value)||0];
   gd.done=true;
   const att=getAtt(S.gid);
-  gd.rots.forEach(rot=>{POS.forEach((pos,i)=>{const p=rot[i];if(!p)return;if(!S.ps[p])S.ps[p]={gp:0,min:0,pos:{'Forward':0,'Mid (P)':0,'Mid (C)':0,'Defense':0}};S.ps[p].min+=5;S.ps[p].pos[pos]++;});});
+  const rpqVal=gd.rpq||2;
+  gd.rots.forEach((rot,ri)=>{const riInQ=ri%rpqVal;const slotMin=(riInQ===rpqVal-1)?10-(rpqVal-1)*Math.floor(10/rpqVal):Math.floor(10/rpqVal);POS.forEach((pos,i)=>{const p=rot[i];if(!p)return;if(!S.ps[p])S.ps[p]={gp:0,min:0,pos:{'Forward':0,'Mid (P)':0,'Mid (C)':0,'Defense':0}};S.ps[p].min+=slotMin;S.ps[p].pos[pos]++;});});
   att.forEach(p=>{if(S.ps[p])S.ps[p].gp++;});
   if(!gd.caps){const caps=suggestCaps(S.gid);gd.caps=caps;if(!S.capLog.find(x=>x.gid===S.gid))S.capLog.push({gid:S.gid,caps});}
   save();renderPlan();
@@ -1546,8 +1601,9 @@ function renderRot(rots,rpq,att,editable){
       <div class="rot-qhead"><span>${QN[q]}</span><span class="qtime">0:00 – 10:00 (resets each quarter)</span></div>
       <table class="rot-tbl"><thead><tr><th>Position</th>`;
     for(let r=0;r<rpq;r++){
-      const mS=r*Math.floor(10/rpq),mE=(r+1)*Math.floor(10/rpq);
-      html+=`<th>${r===0?'First':'Second'} &nbsp;<span style="font-weight:400;font-size:10px">${mS}:00–${mE}:00</span></th>`;
+      const mS=r*Math.floor(10/rpq),mE=(r===rpq-1)?10:(r+1)*Math.floor(10/rpq);
+      const lbl=['First','Second','Third'][r]||`Slot ${r+1}`;
+      html+=`<th>${lbl} &nbsp;<span style="font-weight:400;font-size:10px">${mS}:00–${mE}:00</span></th>`;
     }
     html+=`</tr></thead><tbody>`;
     POS.forEach((pos,pi)=>{
@@ -1580,24 +1636,27 @@ function openDrop(e,ri,pi){
   const drop=document.getElementById('cellDrop');
   drop.innerHTML=att.map(p=>`<div class="${p===cur?'curr':''}" onclick="setCellPlayer('${p}')">${p}${rot.includes(p)&&p!==cur?' ↔':p===cur?' ✓':''}</div>`).join('');
   const cell=document.getElementById(`c${ri}_${pi}`),rect=cell.getBoundingClientRect();
-  drop.style.left=rect.left+'px';drop.style.top=(rect.bottom+window.scrollY)+'px';drop.style.display='block';
+  drop.style.left=Math.min(rect.left,window.innerWidth-160)+'px';
+  drop.style.top=Math.min(rect.bottom,window.innerHeight-240)+'px';
+  drop.style.display='block';
 }
 function setCellPlayer(np){
   const{ri,pi}=dropTarget;const gd=S.games[String(S.gid)];const rot=gd.rots[ri];const op=rot[pi];
   if(op===np){closeDrop();return;}
   const oi=rot.indexOf(np);if(oi>=0)rot[oi]=op;rot[pi]=np;
-  closeDrop();save();renderRot(gd.rots,gd.rpq||2,getAtt(S.gid),true);checkAlerts(gd.rots,getAtt(S.gid));
+  closeDrop();save();renderRot(gd.rots,gd.rpq||2,getAtt(S.gid),true);checkAlerts(gd.rots,getAtt(S.gid),gd.rpq||2);
 }
 function closeDrop(){document.getElementById('cellDrop').style.display='none';dropTarget=null;}
 document.addEventListener('click',closeDrop);
 
 // ── Alerts ─────────────────────────────
-function checkAlerts(rots,att){
+function checkAlerts(rots,att,rpq){
+  rpq=rpq||2;
   const al=[];const gpc={};att.forEach(p=>gpc[p]={});
   rots.forEach(r=>{if(!r)return;POS.forEach((pos,i)=>{const p=r[i];if(!p)return;if(!gpc[p])gpc[p]={};gpc[p][pos]=(gpc[p][pos]||0)+1;});});
   const rep=[];att.forEach(p=>POS.forEach(pos=>{if((gpc[p]?.[pos]||0)>1)rep.push(`${p} → ${pos}`);}));
   if(rep.length)al.push({t:'a-warn',msg:'Position repeats this game: '+rep.join(', ')});
-  const mins={};att.forEach(p=>{let m=0;rots.forEach(r=>{if(r&&r.includes(p))m+=5;});mins[p]=m;});
+  const mins={};att.forEach(p=>{let m=0;rots.forEach((r,ri)=>{if(r&&r.includes(p)){const riInQ=ri%rpq;m+=(riInQ===rpq-1)?10-(rpq-1)*Math.floor(10/rpq):Math.floor(10/rpq);}});mins[p]=m;});
   const lo=Math.min(...Object.values(mins)),hi=Math.max(...Object.values(mins));
   if(hi-lo<=5)al.push({t:'a-ok',msg:`Playing time balanced: ${lo}–${hi} min per player.`});
   else if(hi-lo>10)al.push({t:'a-warn',msg:`Playing time spread: ${lo}–${hi} min. Check distribution.`});
@@ -1679,9 +1738,12 @@ function populatePrintSel(){
 }
 
 function renderPrint(){
-  const sel=document.getElementById('printSel'),gid=parseInt(sel.value);if(!gid)return;
+  const sel=document.getElementById('printSel'),gid=parseInt(sel.value);
+  const phoneBtn=document.getElementById('phoneViewBtn');
+  if(!gid){if(phoneBtn)phoneBtn.style.display='none';return;}
   const g=GAMES.find(x=>x.id===gid),gd=S.games[String(gid)];
-  if(!gd?.rots){document.getElementById('printArea').innerHTML='<div class="muted sm" style="padding:24px 0">No rotation for this game yet.</div>';return;}
+  if(!gd?.rots){if(phoneBtn)phoneBtn.style.display='none';document.getElementById('printArea').innerHTML='<div class="muted sm" style="padding:24px 0">No rotation for this game yet.</div>';return;}
+  if(phoneBtn)phoneBtn.style.display='';
   const rots=gd.rots,rpq=gd.rpq||2,att=getAtt(gid),caps=gd.caps||[];
   // Home=Gray, Away=Blue
   const jersey=g.home?'GRAY':'BLUE';
@@ -1703,7 +1765,7 @@ function renderPrint(){
     h+=`<table class="pc-table"><thead><tr><th>Position</th>`;
     for(let q=0;q<4;q++){
       for(let r=0;r<rpq;r++){
-        const mS=r*Math.floor(10/rpq),mE=(r+1)*Math.floor(10/rpq);
+        const mS=r*Math.floor(10/rpq),mE=(r===rpq-1)?10:(r+1)*Math.floor(10/rpq);
         const qStart=(r===0)?'q-start':'';
         h+=`<th class="${qStart}">${QN[q]}<br><span style="font-weight:400">${mS}min – ${mE}min</span></th>`;
       }
@@ -1734,6 +1796,51 @@ function renderPrint(){
     <div class="no-print xs muted mb16">Preview — ${totalCols} rotation columns (${4} quarters × ${rpq} rotations each). Three identical copies for coaches.</div>
     <div class="print-copies" style="display:grid;gap:16px">${buildCopy(1)}${buildCopy(2)}${buildCopy(3)}</div>`;
 }
+
+function openPhoneView(){
+  const sel=document.getElementById('printSel'),gid=parseInt(sel.value);if(!gid)return;
+  const g=GAMES.find(x=>x.id===gid),gd=S.games[String(gid)];if(!gd?.rots)return;
+  const rots=gd.rots,rpq=gd.rpq||2,att=getAtt(gid),caps=gd.caps||[];
+  const jersey=g.home?'GRAY':'BLUE';
+  const vs=g.home?`HOME vs ${g.opp}`:`AWAY @ ${g.opp}`;
+  const QN=['Q1','Q2','Q3','Q4'];
+  let h=`<div style="font-family:Arial,sans-serif;max-width:440px;margin:0 auto;padding:8px">`;
+  h+=`<div style="border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:12px">
+    <div style="font-size:15px;font-weight:700">⚡ THUNDER · Game ${gid} · ${g.date}</div>
+    <div style="font-size:12px;color:#444;margin-top:2px">${vs} · ${g.loc} · ${g.field}</div>
+    <div style="font-size:12px;color:#444">Arrive ${g.arrive} · Kickoff ${g.time} · Jersey: <strong>${jersey}</strong></div>
+    ${caps.length?`<div style="font-size:12px;color:#444">Captains: <strong>${caps.join(' & ')}</strong></div>`:''}
+  </div>`;
+  for(let q=0;q<4;q++){
+    h+=`<div style="margin-bottom:14px">
+      <div style="font-weight:800;font-size:12px;background:#111;color:#fff;padding:4px 8px;margin-bottom:4px;letter-spacing:0.06em">${QN[q]}</div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead><tr><th style="text-align:left;padding:4px 6px;background:#e8e8e8;border:1px solid #aaa;font-size:10px">POS</th>`;
+    for(let r=0;r<rpq;r++){
+      const mS=r*Math.floor(10/rpq),mE=(r===rpq-1)?10:(r+1)*Math.floor(10/rpq);
+      h+=`<th style="padding:4px 6px;background:#e8e8e8;border:1px solid #aaa;text-align:center;font-size:10px">${mS}–${mE} min</th>`;
+    }
+    h+=`</tr></thead><tbody>`;
+    POS.forEach((pos,pi)=>{
+      h+=`<tr><td style="padding:4px 6px;border:1px solid #aaa;font-weight:700;font-size:9px;text-transform:uppercase;background:#f4f4f4;white-space:nowrap">${PLBL[pos]}</td>`;
+      for(let r=0;r<rpq;r++){
+        const ri=q*rpq+r,rot=rots[ri]||[];
+        h+=`<td style="padding:4px 6px;border:1px solid #aaa;text-align:center;font-weight:600;font-size:13px">${rot[pi]||'—'}</td>`;
+      }
+      h+=`</tr>`;
+    });
+    h+=`<tr><td style="padding:4px 6px;border:1px solid #aaa;font-weight:700;font-size:9px;text-transform:uppercase;background:#f4f4f4;color:#666;font-style:italic">Out</td>`;
+    for(let r=0;r<rpq;r++){
+      const ri=q*rpq+r,rot=rots[ri]||[],out=att.filter(p=>!rot.includes(p));
+      h+=`<td style="padding:4px 6px;border:1px solid #aaa;text-align:center;color:#666;font-style:italic;font-size:11px">${out.join(', ')||'—'}</td>`;
+    }
+    h+=`</tr></tbody></table></div>`;
+  }
+  h+=`</div>`;
+  document.getElementById('phoneViewContent').innerHTML=h;
+  document.getElementById('phoneOverlay').classList.add('open');
+}
+function closePhoneView(){document.getElementById('phoneOverlay').classList.remove('open');}
 
 // ══════════════════════════════════════
 // SCHEDULE PAGE
