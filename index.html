@@ -1464,10 +1464,12 @@ function renderCaps(locked){
     <div class="flex gap8 wrap" id="capActions"></div>
     <div class="xs muted mt8">Game 1: Evan & Beckem. Rotates so everyone leads before anyone repeats.</div>`;
 
+  _capPickerSelection=null; // reset so renderCapPicker initializes from current game state
   renderCapPicker(att, current, suggested, cc);
 }
 
 function renderCapPicker(att, selected, suggested, cc){
+  if(_capPickerSelection===null) _capPickerSelection=[...selected];
   const grid=document.getElementById('capPickerGrid');
   if(!grid)return;
   grid.innerHTML=att.map(p=>{
@@ -1598,7 +1600,7 @@ function renderRot(rots,rpq,att,editable){
   let html='';
   for(let q=0;q<4;q++){
     html+=`<div class="rot-block">
-      <div class="rot-qhead"><span>${QN[q]}</span><span class="qtime">0:00 – 10:00 (resets each quarter)</span></div>
+      <div class="rot-qhead"><span>${QN[q]}</span></div>
       <table class="rot-tbl"><thead><tr><th>Position</th>`;
     for(let r=0;r<rpq;r++){
       const mS=r*Math.floor(10/rpq),mE=(r===rpq-1)?10:(r+1)*Math.floor(10/rpq);
