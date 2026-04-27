@@ -1,0 +1,191 @@
+{
+  "roster": [
+    "Evan",
+    "Theo",
+    "Mateo",
+    "Beckem",
+    "Ronan",
+    "Jack",
+    "Nathan",
+    "Jacob"
+  ],
+  "ps": {
+    "Evan": {
+      "gp": 2,
+      "min": 40,
+      "pos": {
+        "Forward": 2,
+        "Mid (P)": 2,
+        "Mid (C)": 2,
+        "Defense": 2
+      }
+    },
+    "Theo": {
+      "gp": 2,
+      "min": 40,
+      "pos": {
+        "Forward": 2,
+        "Mid (P)": 2,
+        "Mid (C)": 2,
+        "Defense": 2
+      }
+    },
+    "Mateo": {
+      "gp": 2,
+      "min": 40,
+      "pos": {
+        "Forward": 2,
+        "Mid (P)": 2,
+        "Mid (C)": 2,
+        "Defense": 2
+      }
+    },
+    "Beckem": {
+      "gp": 2,
+      "min": 40,
+      "pos": {
+        "Forward": 2,
+        "Mid (P)": 2,
+        "Mid (C)": 2,
+        "Defense": 2
+      }
+    },
+    "Ronan": {
+      "gp": 2,
+      "min": 40,
+      "pos": {
+        "Forward": 2,
+        "Mid (P)": 2,
+        "Mid (C)": 1,
+        "Defense": 3
+      }
+    },
+    "Jack": {
+      "gp": 2,
+      "min": 40,
+      "pos": {
+        "Forward": 2,
+        "Mid (P)": 1,
+        "Mid (C)": 3,
+        "Defense": 2
+      }
+    },
+    "Nathan": {
+      "gp": 2,
+      "min": 40,
+      "pos": {
+        "Forward": 2,
+        "Mid (P)": 2,
+        "Mid (C)": 2,
+        "Defense": 2
+      }
+    },
+    "Jacob": {
+      "gp": 2,
+      "min": 40,
+      "pos": {
+        "Forward": 2,
+        "Mid (P)": 3,
+        "Mid (C)": 2,
+        "Defense": 1
+      }
+    }
+  },
+  "capLog": [
+    {
+      "gid": 1,
+      "caps": [
+        "Evan",
+        "Beckem"
+      ]
+    },
+    {
+      "gid": 2,
+      "caps": [
+        "Theo",
+        "Mateo"
+      ]
+    },
+    {
+      "gid": 3,
+      "caps": [
+        "Ronan",
+        "Jack"
+      ]
+    }
+  ],
+  "games": {
+    "1": {
+      "done": true,
+      "att": [
+        "Evan",
+        "Theo",
+        "Mateo",
+        "Beckem",
+        "Ronan",
+        "Jack",
+        "Nathan",
+        "Jacob"
+      ],
+      "rots": [
+        ["Evan","Theo","Mateo","Beckem"],
+        ["Nathan","Jacob","Jack","Ronan"],
+        ["Mateo","Beckem","Theo","Evan"],
+        ["Ronan","Nathan","Jacob","Jack"],
+        ["Beckem","Mateo","Evan","Theo"],
+        ["Jacob","Ronan","Jack","Nathan"],
+        ["Theo","Evan","Beckem","Mateo"],
+        ["Jack","Jacob","Nathan","Ronan"]
+      ],
+      "rpq": 2,
+      "locked": true,
+      "score": [7, 1],
+      "caps": ["Evan","Beckem"]
+    },
+    "2": {
+      "att": [
+        "Evan","Theo","Mateo","Beckem","Ronan","Jack","Nathan","Jacob"
+      ],
+      "rpq": 2,
+      "locked": true,
+      "_seed": 419519727,
+      "rots": [
+        ["Mateo","Beckem","Evan","Theo"],
+        ["Nathan","Jack","Ronan","Jacob"],
+        ["Beckem","Evan","Theo","Mateo"],
+        ["Jack","Ronan","Jacob","Nathan"],
+        ["Evan","Theo","Mateo","Beckem"],
+        ["Ronan","Jacob","Nathan","Jack"],
+        ["Theo","Mateo","Beckem","Evan"],
+        ["Jacob","Nathan","Jack","Ronan"]
+      ],
+      "caps": ["Theo","Mateo"],
+      "score": [9, 1],
+      "done": true
+    },
+    "3": {
+      "att": [
+        "Evan","Theo","Mateo","Beckem","Ronan","Jack","Nathan","Jacob"
+      ],
+      "rots": [
+        ["Beckem","Jack","Ronan","Mateo"],
+        ["Theo","Evan","Nathan","Jacob"],
+        ["Ronan","Beckem","Mateo","Jack"],
+        ["Nathan","Theo","Jacob","Evan"],
+        ["Mateo","Ronan","Jack","Beckem"],
+        ["Jacob","Nathan","Evan","Theo"],
+        ["Jack","Mateo","Beckem","Ronan"],
+        ["Evan","Jacob","Theo","Nathan"]
+      ],
+      "rpq": 2,
+      "locked": true,
+      "_seed": 979926311,
+      "caps": ["Ronan","Jack"]
+    },
+    "4": {},
+    "5": {},
+    "6": {}
+  },
+  "gid": 3,
+  "_updatedAt": 1745798400000
+}

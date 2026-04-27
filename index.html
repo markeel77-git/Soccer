@@ -877,6 +877,7 @@ hr { border: none; border-top: 1px solid var(--grey-200); margin: 24px 0; }
   </div>
   <div class="h-right">
     <div id="hbadge" class="h-badge">Game 2</div>
+    <div id="syncBadge" class="h-badge" style="display:none"></div>
   </div>
 </header>
 
@@ -1028,6 +1029,19 @@ hr { border: none; border-top: 1px solid var(--grey-200); margin: 24px 0; }
       </div>
     </div>
   </div>
+  <div class="card-group mb16">
+    <div class="card">
+      <div class="card-label">Cloud Sync</div>
+      <div class="flex gap8 wrap" style="align-items:flex-end">
+        <div>
+          <label>Coach Token (write access)</label>
+          <input type="password" id="coachTokenInput" placeholder="Enter token to enable saving" style="width:240px">
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="saveCoachToken()" style="margin-top:22px">Save Token</button>
+      </div>
+      <div class="xs muted mt8" id="syncStatusMsg">Checking sync…</div>
+    </div>
+  </div>
   <div class="card-group">
     <div class="card">
       <div class="card-label">Data Management</div>
@@ -1036,7 +1050,7 @@ hr { border: none; border-top: 1px solid var(--grey-200); margin: 24px 0; }
         <button class="btn btn-secondary btn-sm" onclick="importData()">Import JSON</button>
         <button class="btn btn-danger btn-sm" onclick="resetAll()">Reset All Data</button>
       </div>
-      <div class="xs muted mt8">Data saved in browser local storage. Export JSON to back up or share between devices.</div>
+      <div class="xs muted mt8">Data saved in browser local storage and cloud. Export JSON to back up or manually transfer data.</div>
     </div>
   </div>
 </div>
@@ -1120,8 +1134,82 @@ function fresh(){
     gid:2
   };
 }
-function load(){try{const s=localStorage.getItem('thunder_v2');if(s)return JSON.parse(s);}catch(e){}return fresh();}
-function save(){localStorage.setItem('thunder_v2',JSON.stringify(S));}
+// ══════════════════════════════════════
+// CLOUD SYNC
+// ══════════════════════════════════════
+const STORAGE_KEY = 'thunder_v2';
+const TOKEN_KEY   = 'thunder_coach_token';
+const WORKER_URL  = 'https://soccer.theiehls.com/api';
+
+function getToken(){return localStorage.getItem(TOKEN_KEY)||'';}
+function setToken(t){t?localStorage.setItem(TOKEN_KEY,t):localStorage.removeItem(TOKEN_KEY);}
+
+function setSyncBadge(state){
+  const b=document.getElementById('syncBadge');if(!b)return;
+  const map={ok:'☁ Synced',syncing:'⟳ Syncing',offline:'⊘ Offline',updated:'↓ Updated'};
+  const txt=map[state]||'';
+  b.textContent=txt;
+  b.style.display=txt?'':'none';
+  b.style.color=state==='offline'?'#AA0004':state==='updated'?'#007D48':'';
+}
+
+async function pullFromCloud(){
+  try{const r=await fetch(WORKER_URL+'/data',{cache:'no-store'});return r.ok?r.json():null;}
+  catch{return null;}
+}
+
+async function pushToCloud(data){
+  const token=getToken();if(!token)return false;
+  try{
+    const r=await fetch(WORKER_URL+'/data',{
+      method:'PUT',
+      headers:{'Content-Type':'application/json','X-Coach-Token':token},
+      body:JSON.stringify(data)
+    });
+    return r.ok;
+  }catch{return false;}
+}
+
+async function syncFromCloud(){
+  setSyncBadge('syncing');
+  const cloud=await pullFromCloud();
+  if(!cloud){setSyncBadge('offline');updateSyncMsg();return;}
+  const localTs=S._updatedAt||0,cloudTs=cloud._updatedAt||0;
+  if(cloudTs>localTs){
+    S=cloud;
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(S));
+    setSyncBadge('updated');
+    renderPlan();
+  }else{
+    setSyncBadge('ok');
+  }
+  updateSyncMsg();
+}
+
+function updateSyncMsg(){
+  const el=document.getElementById('syncStatusMsg');if(!el)return;
+  const token=getToken();
+  const inp=document.getElementById('coachTokenInput');
+  if(inp&&token&&!inp.value)inp.value='••••••••';
+  el.textContent=token
+    ?'Coach mode — changes save to cloud automatically.'
+    :'View-only mode — data loads from cloud on refresh. Enter token to enable saving.';
+}
+
+function saveCoachToken(){
+  const v=document.getElementById('coachTokenInput').value.trim();
+  if(v==='••••••••')return;
+  setToken(v);
+  updateSyncMsg();
+  showToast(v?'Token saved — coach mode active.':'Token cleared — view-only mode.');
+}
+
+function load(){try{const s=localStorage.getItem(STORAGE_KEY);if(s)return JSON.parse(s);}catch(e){}return fresh();}
+function save(){
+  S._updatedAt=Date.now();
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(S));
+  pushToCloud(S).then(ok=>setSyncBadge(ok?'ok':'offline')).catch(()=>setSyncBadge('offline'));
+}
 let S=load();
 
 // ══════════════════════════════════════
@@ -1952,6 +2040,7 @@ if(!S.games['1'])S.games['1']={done:true,att:[...ROSTER0],rots:G1R,rpq:2,locked:
 if(!S.capLog||!S.capLog.length)S.capLog=[{gid:1,caps:['Evan','Beckem']}];
 if(!S.gid)S.gid=2;
 renderPlan();
+syncFromCloud(); // pull latest data from cloud; re-renders if cloud is newer
 
 // ── Print auto-scale: fit all 3 slips on one page ──
 window.addEventListener('beforeprint',()=>{

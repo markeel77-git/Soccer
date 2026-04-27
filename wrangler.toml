@@ -1,0 +1,22 @@
+name = "thunder-soccer"
+main = "worker.js"
+compatibility_date = "2025-01-01"
+
+# KV namespace — create with: wrangler kv namespace create SOCCER_KV
+# Then paste the resulting id below
+[[kv_namespaces]]
+binding = "KV"
+id = "53e8ec3dfa6c4f2da157fc7bd67c2f73"
+
+# Route is added manually in the Cloudflare dashboard → Workers Routes
+# Pattern: soccer.theiehls.com/api/*   Worker: thunder-soccer
+
+# To deploy:
+#   1. npm install -g wrangler
+#   2. wrangler login
+#   3. wrangler kv namespace create SOCCER_KV   (paste id above)
+#   4. wrangler secret put COACH_TOKEN          (enter your chosen password)
+#   5. wrangler deploy
+#
+# To seed initial data from your JSON export:
+#   wrangler kv key put --namespace-id=YOUR_KV_ID "thunder_v2" "$(cat your-export.json)"
