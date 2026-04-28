@@ -915,15 +915,15 @@ hr { border: none; border-top: 1px solid var(--grey-200); margin: 24px 0; }
 
 <!-- Tabs -->
 <div class="tabs">
-  <div class="tab"    onclick="nav('schedule',this)">Schedule</div>
-  <div class="tab on" onclick="nav('plan',this)">Game Plan</div>
+  <div class="tab on" onclick="nav('schedule',this)">Schedule</div>
+  <div class="tab" id="tabPlan" onclick="navPlanTab(this)">Game Plan</div>
   <div class="tab"    onclick="nav('print',this)">Print Sheet</div>
   <div class="tab"    onclick="nav('season',this)">Season Stats</div>
   <div class="tab"    onclick="nav('settings',this)">Settings</div>
 </div>
 
 <!-- ══ PLAN ══ -->
-<div id="page-plan" class="page on">
+<div id="page-plan" class="page">
   <div class="page-header-row fb mb16 wrap gap8 no-print">
     <div>
       <div class="section-eyebrow" id="planEyebrow">Game 2</div>
@@ -1040,7 +1040,7 @@ hr { border: none; border-top: 1px solid var(--grey-200); margin: 24px 0; }
 </div>
 
 <!-- ══ SCHEDULE ══ -->
-<div id="page-schedule" class="page">
+<div id="page-schedule" class="page on">
   <div id="schedEyebrow" class="section-eyebrow">Spring 2026</div>
   <div class="section-title">Season Schedule</div>
   <div class="sched-grid" id="schedGrid"></div>
@@ -1830,12 +1830,22 @@ function showAlerts(al){
 function prevG(){if(S.gid>1){S.gid--;save();renderPlan();}}
 function nextG(){if(S.gid<6){S.gid++;save();renderPlan();}}
 function goToGame(id){S.gid=id;S.games[String(id)]=S.games[String(id)]||{};save();nav('plan');}
+function navPlanTab(tabEl){
+  const today=new Date();today.setHours(0,0,0,0);
+  const next=GAMES.find(g=>{
+    const [m,d]=g.date.split('/').map(Number);
+    const gd=new Date(2026,m-1,d);
+    return !S.games[String(g.id)]?.done && gd>=today;
+  });
+  if(next){S.gid=next.id;S.games[String(next.id)]=S.games[String(next.id)]||{};}
+  nav('plan',tabEl);
+}
 function nav(name,tabEl){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
   document.getElementById('page-'+name).classList.add('on');
   if(tabEl)tabEl.classList.add('on');
-  else document.querySelectorAll('.tab').forEach(t=>{if(t.getAttribute('onclick')?.includes("'"+name+"'"))t.classList.add('on');});
+  else{const byId=document.getElementById('tab'+name.charAt(0).toUpperCase()+name.slice(1));if(byId){byId.classList.add('on');}else document.querySelectorAll('.tab').forEach(t=>{if(t.getAttribute('onclick')?.includes("'"+name+"'"))t.classList.add('on');});}
   if(name==='plan')renderPlan();
   if(name==='season')renderSeason();
   if(name==='print'){populatePrintSel();renderPrint();}
@@ -2193,7 +2203,7 @@ if(!S.capLog||!S.capLog.length)S.capLog=[{gid:1,caps:['Evan','Beckem']}];
 if(!S.gid)S.gid=2;
 if(!S.cfg)S.cfg={};
 renderHeader();
-renderPlan();
+renderSchedule();
 syncFromCloud(); // pull latest data from cloud; re-renders if cloud is newer
 
 // ── Print auto-scale: fit all 3 slips on one page ──
