@@ -1845,6 +1845,17 @@ function renderSeason(){
   const dc=Object.values(S.games).filter(g=>g.done).length;
   let wins=0,losses=0,ties=0;
   Object.values(S.games).forEach(gd=>{if(gd.done&&gd.score){const[u,t]=gd.score;if(u>t)wins++;else if(t>u)losses++;else ties++;}});
+  const upcoming=GAMES.filter(g=>!S.games[String(g.id)]?.done);
+  const g1=upcoming[0]||null,g2=upcoming[1]||null;
+  function gameBlock(g,label){
+    if(!g)return`<div style="min-width:160px"><div class="xs muted" style="text-transform:uppercase;letter-spacing:.06em;font-weight:500">${label}</div><div style="font-size:16px;font-weight:400;color:var(--text-secondary);margin-top:4px">—</div></div>`;
+    const vs=g.home?`vs ${g.opp}`:`@ ${g.opp}`;
+    return`<div style="min-width:160px">
+      <div class="xs muted" style="text-transform:uppercase;letter-spacing:.06em;font-weight:500">${label}</div>
+      <div style="font-size:20px;font-weight:600;font-family:var(--font-mono);line-height:1.2;margin-top:2px">${g.date}</div>
+      <div style="font-size:13px;font-weight:400;color:var(--text-secondary);margin-top:1px">${g.time} &nbsp;·&nbsp; ${vs}</div>
+    </div>`;
+  }
   document.getElementById('seasonSum').innerHTML=`
     <div style="min-width:140px;padding-right:24px;margin-right:8px;border-right:1px solid var(--grey-200)">
       <div class="xs muted" style="text-transform:uppercase;letter-spacing:.06em;font-weight:500">Record</div>
@@ -1852,8 +1863,8 @@ function renderSeason(){
       <div class="xs muted">W – L – T</div>
     </div>
     <div style="min-width:100px"><div class="xs muted" style="text-transform:uppercase;letter-spacing:.06em;font-weight:500">Games Played</div><div style="font-size:28px;font-weight:500;font-family:var(--font-mono)">${dc}/6</div></div>
-    <div style="min-width:100px"><div class="xs muted" style="text-transform:uppercase;letter-spacing:.06em;font-weight:500">Next Game</div>${(()=>{const ng=GAMES.find(g=>!S.games[String(g.id)]?.done);return ng?`<div style="font-size:22px;font-weight:500;font-family:var(--font-mono);line-height:1.2">${ng.date}<div style="font-size:13px;font-weight:400;color:var(--text-secondary);margin-top:2px">${ng.time}</div></div>`:`<div style="font-size:28px;font-weight:500;font-family:var(--font-mono)">Done!</div>`;})()}</div>
-    <div style="min-width:100px"><div class="xs muted" style="text-transform:uppercase;letter-spacing:.06em;font-weight:500">Roster</div><div style="font-size:28px;font-weight:500;font-family:var(--font-mono)">${S.roster.length}</div></div>`;
+    ${gameBlock(g1,"This Week's Game")}
+    ${gameBlock(g2,"Next Week's Game")}`;
   const allM=S.roster.map(p=>S.ps[p]?.min||0),loM=Math.min(...allM),hiM=Math.max(...allM);
   const sal=[];
   if(hiM-loM>15){const beh=S.roster.filter(p=>(S.ps[p]?.min||0)===loM).join(', ');sal.push({t:'a-warn',msg:`${beh} ha${beh.includes(',')?'ve':'s'} the fewest minutes (${loM}). Will be prioritized in upcoming rotations.`});}
