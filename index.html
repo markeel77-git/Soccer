@@ -109,16 +109,18 @@ header {
 }
 .h-submark {
   font-family: var(--font-display);
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 24px;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--text-secondary);
+  color: var(--black);
   line-height: 1;
   display: flex;
   align-items: center;
   gap: 4px;
-  margin-top: 3px;
+  border-left: 1px solid var(--border-secondary);
+  padding-left: 16px;
+  margin-left: 4px;
 }
 .h-submark .bolt { color: var(--bolt); }
 .h-eyebrow {
@@ -902,11 +904,8 @@ hr { border: none; border-top: 1px solid var(--grey-200); margin: 24px 0; }
 <!-- Header -->
 <header>
   <div class="h-left">
-    <div>
-      <div class="h-wordmark">SUB TRACKER</div>
-      <div class="h-submark"><span class="bolt">⚡</span> <span id="hTeamName">THUNDER</span></div>
-    </div>
-    <span class="h-eyebrow" id="hEyebrow">U9 · CF09A</span>
+    <div class="h-wordmark">⚽ SUB TRACKER</div>
+    <div class="h-submark"><span class="bolt">⚡</span> <span id="hTeamName">THUNDER</span></div>
   </div>
   <div class="h-right">
     <div id="syncBadge" class="sync-dot" style="display:none"></div>
