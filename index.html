@@ -146,6 +146,8 @@ header {
 .sync-dot.sd-syncing{ background: var(--grey-100); border-color: var(--border-secondary); color: var(--text-secondary); }
 .sync-dot.sd-syncing .dot { background: var(--grey-300); animation: pulse 1s infinite; }
 .sync-dot.sd-warn   { background: #FFFBE8; border-color: #E8C040; color: #6A4A00; }
+.sync-dot.sd-unauth { background: #FFE8E8; border-color: #E08080; color: var(--red); }
+.sync-dot.sd-unauth .dot { background: var(--red); }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
 
 /* ── NAV TABS ── */
@@ -1184,6 +1186,7 @@ function setSyncBadge(state){
     updated: {cls:'sd-ok',     label:'Updated'},
     syncing: {cls:'sd-syncing',label:'Syncing'},
     offline: {cls:'sd-warn',   label:'⚠ Offline'},
+    unauth:  {cls:'sd-unauth', label:'⚠ Token invalid'},
   };
   const c=cfg[state];
   if(!c){b.style.display='none';return;}
@@ -1205,8 +1208,9 @@ async function pushToCloud(data){
       headers:{'Content-Type':'application/json','X-Coach-Token':token},
       body:JSON.stringify(data)
     });
-    return r.ok;
-  }catch{return false;}
+    if(r.status===401)return 'unauthorized';
+    return r.ok?'ok':'error';
+  }catch{return 'error';}
 }
 
 function rerenderCurrentPage(){
@@ -1283,7 +1287,11 @@ function load(){try{const s=localStorage.getItem(STORAGE_KEY);if(s)return JSON.p
 function save(){
   S._updatedAt=Date.now();
   localStorage.setItem(STORAGE_KEY,JSON.stringify(S));
-  pushToCloud(S).then(ok=>setSyncBadge(ok?'ok':'offline')).catch(()=>setSyncBadge('offline'));
+  pushToCloud(S).then(result=>{
+    if(result==='ok')setSyncBadge('ok');
+    else if(result==='unauthorized'){setSyncBadge('unauth');showToast('Coach token invalid — update it in Settings.');}
+    else setSyncBadge('offline');
+  }).catch(()=>setSyncBadge('offline'));
 }
 let S=load();
 
