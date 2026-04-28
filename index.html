@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Thunder — Sub Tracker</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23111111'/><text x='16' y='24' text-anchor='middle' font-size='22'>⚡</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23111111'/><text x='16' y='24' text-anchor='middle' font-size='22'>⚽</text></svg>">
 <style>
 /* ── FONTS ── */
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Barlow+Condensed:wght@700;800&family=Helvetica+Neue:wght@400;500&display=swap');
@@ -106,11 +106,21 @@ header {
   letter-spacing: 0.08em;
   color: var(--black);
   line-height: 1;
+}
+.h-submark {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+  line-height: 1;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
+  margin-top: 3px;
 }
-.h-wordmark .bolt { color: var(--bolt); }
+.h-submark .bolt { color: var(--bolt); }
 .h-eyebrow {
   font-size: 11px;
   font-weight: 500;
@@ -864,13 +874,16 @@ hr { border: none; border-top: 1px solid var(--grey-200); margin: 24px 0; }
 <body>
 
 <!-- Promo bar -->
-<div class="promo-bar no-print">Thunder U9 · CF09A · Cedar Falls, IA · Spring 2026</div>
+<div id="promoBar" class="promo-bar no-print">Thunder U9 · CF09A · Cedar Falls, IA · Spring 2026</div>
 
 <!-- Header -->
 <header>
   <div class="h-left">
-    <div class="h-wordmark"><span class="bolt">⚡</span>THUNDER</div>
-    <span class="h-eyebrow">U9 Sub Tracker</span>
+    <div>
+      <div class="h-wordmark">SUB TRACKER</div>
+      <div class="h-submark"><span class="bolt">⚡</span> <span id="hTeamName">THUNDER</span></div>
+    </div>
+    <span class="h-eyebrow" id="hEyebrow">U9 · CF09A</span>
   </div>
   <div class="h-right">
     <div id="hbadge" class="h-badge">Game 2</div>
@@ -880,11 +893,11 @@ hr { border: none; border-top: 1px solid var(--grey-200); margin: 24px 0; }
 
 <!-- Tabs -->
 <div class="tabs">
-  <div class="tab on"  onclick="nav('plan',this)">Game Plan</div>
-  <div class="tab"    onclick="nav('season',this)">Season Stats</div>
-  <div class="tab"    onclick="nav('print',this)">Print Sheet</div>
   <div class="tab"    onclick="nav('schedule',this)">Schedule</div>
-  <div class="tab"    onclick="nav('roster',this)">Roster</div>
+  <div class="tab on" onclick="nav('plan',this)">Game Plan</div>
+  <div class="tab"    onclick="nav('print',this)">Print Sheet</div>
+  <div class="tab"    onclick="nav('season',this)">Season Stats</div>
+  <div class="tab"    onclick="nav('settings',this)">Settings</div>
 </div>
 
 <!-- ══ PLAN ══ -->
@@ -956,7 +969,7 @@ hr { border: none; border-top: 1px solid var(--grey-200); margin: 24px 0; }
 
 <!-- ══ SEASON ══ -->
 <div id="page-season" class="page">
-  <div class="section-eyebrow">Thunder · CF09A</div>
+  <div id="seasonEyebrow" class="section-eyebrow">Thunder · CF09A</div>
   <div class="section-title">Season Stats</div>
   <div class="card-group mb16">
     <div class="card"><div id="seasonSum" class="flex gap16 wrap"></div></div>
@@ -991,7 +1004,7 @@ hr { border: none; border-top: 1px solid var(--grey-200); margin: 24px 0; }
 
 <!-- ══ PRINT ══ -->
 <div id="page-print" class="page">
-  <div class="section-eyebrow no-print">Thunder · CF09A</div>
+  <div id="printEyebrow" class="section-eyebrow no-print">Thunder · CF09A</div>
   <div class="section-title no-print">Game Day Sub Sheet</div>
   <div class="flex gap8 wrap mb16 no-print" style="align-items:flex-end">
     <div>
@@ -1006,18 +1019,30 @@ hr { border: none; border-top: 1px solid var(--grey-200); margin: 24px 0; }
 
 <!-- ══ SCHEDULE ══ -->
 <div id="page-schedule" class="page">
-  <div class="section-eyebrow">Spring 2026</div>
+  <div id="schedEyebrow" class="section-eyebrow">Spring 2026</div>
   <div class="section-title">Season Schedule</div>
   <div class="sched-grid" id="schedGrid"></div>
 </div>
 
-<!-- ══ ROSTER ══ -->
-<div id="page-roster" class="page">
-  <div class="section-eyebrow">Thunder · CF09A</div>
-  <div class="section-title">Roster</div>
+<!-- ══ SETTINGS ══ -->
+<div id="page-settings" class="page">
+  <div id="settingsEyebrow" class="section-eyebrow">Thunder · CF09A</div>
+  <div class="section-title">Settings</div>
   <div class="card-group mb16">
     <div class="card">
-      <div class="card-label">Players</div>
+      <div class="card-label">Team</div>
+      <div class="flex gap16 wrap" style="align-items:flex-end">
+        <div><label>Team Name</label><input type="text" id="cfgTeamName" placeholder="Thunder" style="width:160px"></div>
+        <div><label>Team Code</label><input type="text" id="cfgTeamCode" placeholder="CF09A" style="width:120px"></div>
+        <div><label>Location</label><input type="text" id="cfgTeamLoc" placeholder="Cedar Falls, IA" style="width:180px"></div>
+        <div><label>Season</label><input type="text" id="cfgSeason" placeholder="Spring 2026" style="width:140px"></div>
+        <button class="btn btn-primary btn-sm" onclick="saveTeamCfg()" style="margin-top:22px">Save</button>
+      </div>
+    </div>
+  </div>
+  <div class="card-group mb16">
+    <div class="card">
+      <div class="card-label">Roster</div>
       <div id="rosterList"></div>
       <hr>
       <div class="flex gap8 wrap" style="align-items:flex-end">
@@ -1048,7 +1073,7 @@ hr { border: none; border-top: 1px solid var(--grey-200); margin: 24px 0; }
         <button class="btn btn-secondary btn-sm" onclick="importData()">Import JSON</button>
         <button class="btn btn-danger btn-sm" onclick="resetAll()">Reset All Data</button>
       </div>
-      <div class="xs muted mt8">Data saved in browser local storage and cloud. Export JSON to back up or manually transfer data.</div>
+      <div class="xs muted mt8">Export JSON creates a local backup in case of cloud issues. Import restores from a backup. Reset clears all local and cloud data.</div>
     </div>
   </div>
 </div>
@@ -1071,7 +1096,8 @@ hr { border: none; border-top: 1px solid var(--grey-200); margin: 24px 0; }
 // ══════════════════════════════════════
 // CONSTANTS
 // ══════════════════════════════════════
-const POS  = ['Forward','Mid (P)','Mid (C)','Defense'];
+const CFG_DEFAULTS={teamName:'Thunder',teamCode:'CF09A',teamLoc:'Cedar Falls, IA',season:'Spring 2026'};
+function getCfg(){return{...CFG_DEFAULTS,...(S&&S.cfg?S.cfg:{})};}
 const PKEY = {'Forward':'fwd','Mid (P)':'mp','Mid (C)':'mc','Defense':'def'};
 const PCLS = {'Forward':'cfwd','Mid (P)':'cmp','Mid (C)':'cmc','Defense':'cdef'};
 const PLBL = {'Forward':'Forward','Mid (P)':'P-Mid','Mid (C)':'C-Mid','Defense':'Defense'};
@@ -1126,7 +1152,7 @@ function buildG1Stats(){
 }
 function fresh(){
   return {
-    roster:[...ROSTER0],ps:buildG1Stats(),
+    roster:[...ROSTER0],ps:buildG1Stats(),cfg:{},
     capLog:[{gid:1,caps:['Evan','Beckem']}],
     games:{'1':{done:true,att:[...ROSTER0],rots:G1R,rpq:2,locked:true,score:[0,0],caps:['Evan','Beckem']}},
     gid:2
@@ -1177,7 +1203,7 @@ async function syncFromCloud(){
     S=cloud;
     localStorage.setItem(STORAGE_KEY,JSON.stringify(S));
     setSyncBadge('updated');
-    renderPlan();
+    renderHeader();renderPlan();
   }else{
     setSyncBadge('ok');
   }
@@ -1191,7 +1217,7 @@ async function forcePullFromCloud(){
   S=cloud;
   localStorage.setItem(STORAGE_KEY,JSON.stringify(S));
   setSyncBadge('updated');
-  renderPlan();
+  renderHeader();renderPlan();
   updateSyncMsg();
   showToast('Loaded latest data from cloud.');
 }
@@ -1204,6 +1230,24 @@ function updateSyncMsg(){
   el.textContent=token
     ?'Coach mode — changes save to cloud automatically.'
     :'View-only mode — data loads from cloud on refresh. Enter token to enable saving.';
+}
+
+function renderHeader(){
+  const cfg=getCfg();
+  const pb=document.getElementById('promoBar');
+  if(pb)pb.textContent=`${cfg.teamName} U9 · ${cfg.teamCode} · ${cfg.teamLoc} · ${cfg.season}`;
+  const hn=document.getElementById('hTeamName');
+  if(hn)hn.textContent=cfg.teamName.toUpperCase();
+  const he=document.getElementById('hEyebrow');
+  if(he)he.textContent=`U9 · ${cfg.teamCode}`;
+  const se=document.getElementById('seasonEyebrow');
+  if(se)se.textContent=`${cfg.teamName} · ${cfg.teamCode}`;
+  const pe=document.getElementById('printEyebrow');
+  if(pe)pe.textContent=`${cfg.teamName} · ${cfg.teamCode}`;
+  const sche=document.getElementById('schedEyebrow');
+  if(sche)sche.textContent=cfg.season;
+  const sete=document.getElementById('settingsEyebrow');
+  if(sete)sete.textContent=`${cfg.teamName} · ${cfg.teamCode}`;
 }
 
 function saveCoachToken(){
@@ -1248,11 +1292,9 @@ function getAtt(gid){const gd=S.games[String(gid)];return gd&&gd.att?gd.att:[...
 function buildEmail(gid){
   const g=GAMES.find(x=>x.id===gid);
   const gd=S.games[String(gid)]||{};
-  // Home=Gray, Away=Blue
   const jersey=g.home?'GRAY':'BLUE';
   const homeAway=g.home?`Home vs ${g.opp}`:`Away @ ${g.opp}`;
-  const caps=gd.caps||suggestCaps(gid);
-  return `Hello Thunder families,
+  return `Hello ${getCfg().teamName} families,
 
 Quick note ahead of this week's game:
 
@@ -1263,9 +1305,6 @@ Arrive by: ${g.arrive}
 Game time: ${g.time}
 Jerseys: Wear ${jersey}
 
-Captains for this game: ${caps.join(' and ')}.
-
-See you out there!
 Thanks, Mark`;
 }
 
@@ -1768,7 +1807,7 @@ function nav(name,tabEl){
   if(name==='season')renderSeason();
   if(name==='print'){populatePrintSel();renderPrint();}
   if(name==='schedule')renderSchedule();
-  if(name==='roster')renderRoster();
+  if(name==='settings')renderSettings();
 }
 
 // ══════════════════════════════════════
@@ -1785,7 +1824,7 @@ function renderSeason(){
       <div class="xs muted">W – L – T</div>
     </div>
     <div style="min-width:100px"><div class="xs muted" style="text-transform:uppercase;letter-spacing:.06em;font-weight:500">Games Played</div><div style="font-size:28px;font-weight:500;font-family:var(--font-mono)">${dc}/6</div></div>
-    <div style="min-width:100px"><div class="xs muted" style="text-transform:uppercase;letter-spacing:.06em;font-weight:500">Next Game</div><div style="font-size:28px;font-weight:500;font-family:var(--font-mono)">${GAMES.find(g=>!S.games[String(g.id)]?.done)?.date||'Done!'}</div></div>
+    <div style="min-width:100px"><div class="xs muted" style="text-transform:uppercase;letter-spacing:.06em;font-weight:500">Next Game</div>${(()=>{const ng=GAMES.find(g=>!S.games[String(g.id)]?.done);return ng?`<div style="font-size:22px;font-weight:500;font-family:var(--font-mono);line-height:1.2">${ng.date}<div style="font-size:13px;font-weight:400;color:var(--text-secondary);margin-top:2px">${ng.time}</div></div>`:`<div style="font-size:28px;font-weight:500;font-family:var(--font-mono)">Done!</div>`;})()}</div>
     <div style="min-width:100px"><div class="xs muted" style="text-transform:uppercase;letter-spacing:.06em;font-weight:500">Roster</div><div style="font-size:28px;font-weight:500;font-family:var(--font-mono)">${S.roster.length}</div></div>`;
   const allM=S.roster.map(p=>S.ps[p]?.min||0),loM=Math.min(...allM),hiM=Math.max(...allM);
   const sal=[];
@@ -1840,13 +1879,18 @@ function renderPrint(){
   const totalCols=4*rpq;
 
   function buildCopy(n){
+    const cfg=getCfg();
     // Header
     let h=`<div class="print-copy-card">
       <div class="pc-header">
-        <div class="pc-title">⚡ THUNDER &nbsp;·&nbsp; Game ${gid} &nbsp;·&nbsp; ${g.date}</div>
+        <div class="pc-title">⚡ ${cfg.teamName.toUpperCase()} &nbsp;·&nbsp; Game ${gid} &nbsp;·&nbsp; ${g.date}</div>
         <div class="pc-meta">${vs} &nbsp;·&nbsp; ${g.loc} ${g.field} &nbsp;·&nbsp; Arrive: ${g.arrive} &nbsp;·&nbsp; Kickoff: ${g.time} &nbsp;·&nbsp; Jersey: <strong>${jersey}</strong></div>`;
     if(caps.length)h+=`<div class="pc-meta">Captains: <strong>${caps.join(' & ')}</strong></div>`;
-    h+=`<div class="pc-meta">Score: Thunder <span style="display:inline-block;min-width:24px;height:14px;border:1.5px solid #555;margin:0 3px;vertical-align:middle"></span> – ${g.opp} <span style="display:inline-block;min-width:24px;height:14px;border:1.5px solid #555;margin:0 3px;vertical-align:middle"></span></div>`;
+    if(gd.done&&gd.score){
+      h+=`<div class="pc-meta">Final Score: <strong>${cfg.teamName} ${gd.score[0]} – ${g.opp} ${gd.score[1]}</strong></div>`;
+    }else{
+      h+=`<div class="pc-meta">Score: ${cfg.teamName} <span style="display:inline-block;min-width:24px;height:14px;border:1.5px solid #555;margin:0 3px;vertical-align:middle"></span> – ${g.opp} <span style="display:inline-block;min-width:24px;height:14px;border:1.5px solid #555;margin:0 3px;vertical-align:middle"></span></div>`;
+    }
     h+=`</div>`;
 
     // Table — q-start class marks first column of each quarter for thick left border
@@ -1881,7 +1925,6 @@ function renderPrint(){
   }
 
   document.getElementById('printArea').innerHTML=`
-    <div class="no-print xs muted mb16">Preview — ${totalCols} rotation columns (${4} quarters × ${rpq} rotations each). Three identical copies for coaches.</div>
     <div class="print-copies" style="display:grid;gap:16px">${buildCopy(1)}${buildCopy(2)}${buildCopy(3)}</div>`;
 }
 
@@ -1892,9 +1935,10 @@ function openPhoneView(){
   const jersey=g.home?'GRAY':'BLUE';
   const vs=g.home?`HOME vs ${g.opp}`:`AWAY @ ${g.opp}`;
   const QN=['Q1','Q2','Q3','Q4'];
+  const cfg=getCfg();
   let h=`<div style="font-family:Arial,sans-serif;max-width:440px;margin:0 auto;padding:8px">`;
   h+=`<div style="border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:12px">
-    <div style="font-size:15px;font-weight:700">⚡ THUNDER · Game ${gid} · ${g.date}</div>
+    <div style="font-size:15px;font-weight:700">⚡ ${cfg.teamName.toUpperCase()} · Game ${gid} · ${g.date}</div>
     <div style="font-size:12px;color:#444;margin-top:2px">${vs} · ${g.loc} · ${g.field}</div>
     <div style="font-size:12px;color:#444">Arrive ${g.arrive} · Kickoff ${g.time} · Jersey: <strong>${jersey}</strong></div>
     ${caps.length?`<div style="font-size:12px;color:#444">Captains: <strong>${caps.join(' & ')}</strong></div>`:''}
@@ -1979,6 +2023,28 @@ function removePlayer(name){
   if(!confirm(`Remove ${name}? Stats remain saved.`))return;
   S.roster=S.roster.filter(p=>p!==name);save();renderRoster();
 }
+function renderSettings(){
+  renderRoster();
+  updateSyncMsg();
+  const cfg=getCfg();
+  document.getElementById('cfgTeamName').value=cfg.teamName;
+  document.getElementById('cfgTeamCode').value=cfg.teamCode;
+  document.getElementById('cfgTeamLoc').value=cfg.teamLoc;
+  document.getElementById('cfgSeason').value=cfg.season;
+}
+function saveTeamCfg(){
+  const n=document.getElementById('cfgTeamName').value.trim();
+  const c=document.getElementById('cfgTeamCode').value.trim();
+  const l=document.getElementById('cfgTeamLoc').value.trim();
+  const s=document.getElementById('cfgSeason').value.trim();
+  S.cfg={
+    teamName:n||CFG_DEFAULTS.teamName,
+    teamCode:c||CFG_DEFAULTS.teamCode,
+    teamLoc:l||CFG_DEFAULTS.teamLoc,
+    season:s||CFG_DEFAULTS.season
+  };
+  save();renderHeader();showToast('Team settings saved.');
+}
 
 // ══════════════════════════════════════
 // DATA
@@ -2037,6 +2103,8 @@ S.roster.forEach(p=>{if(!S.ps[p])S.ps[p]={gp:0,min:0,pos:{'Forward':0,'Mid (P)':
 if(!S.games['1'])S.games['1']={done:true,att:[...ROSTER0],rots:G1R,rpq:2,locked:true,score:[0,0],caps:['Evan','Beckem']};
 if(!S.capLog||!S.capLog.length)S.capLog=[{gid:1,caps:['Evan','Beckem']}];
 if(!S.gid)S.gid=2;
+if(!S.cfg)S.cfg={};
+renderHeader();
 renderPlan();
 syncFromCloud(); // pull latest data from cloud; re-renders if cloud is newer
 
