@@ -1,3 +1,12 @@
+function isValidSchema(d) {
+  if (!d || typeof d !== 'object' || Array.isArray(d)) return false;
+  if (!Array.isArray(d.roster) || d.roster.length === 0) return false;
+  if (typeof d.games !== 'object' || d.games === null || Array.isArray(d.games)) return false;
+  if (!Array.isArray(d.capLog)) return false;
+  if (typeof d.ps !== 'object' || d.ps === null || Array.isArray(d.ps)) return false;
+  return true;
+}
+
 const ALLOWED_ORIGINS = [
   'https://soccer.theiehls.com',
   'http://localhost',
@@ -35,11 +44,14 @@ export default {
         if (!token || token !== env.COACH_TOKEN) {
           return new Response('Unauthorized', { status: 401, headers: cors });
         }
-        let body;
+        let body, data;
         try {
           body = await request.text();
-          JSON.parse(body); // validate JSON before storing
+          data = JSON.parse(body);
         } catch {
+          return new Response('Bad Request', { status: 400, headers: cors });
+        }
+        if (!isValidSchema(data)) {
           return new Response('Bad Request', { status: 400, headers: cors });
         }
         await env.KV.put('thunder_v2', body);

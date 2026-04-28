@@ -1105,6 +1105,7 @@ hr { border: none; border-top: 1px solid var(--grey-200); margin: 24px 0; }
 // ══════════════════════════════════════
 const CFG_DEFAULTS={teamName:'Thunder',teamCode:'CF09A',teamLoc:'Cedar Falls, IA',season:'Spring 2026'};
 function getCfg(){return{...CFG_DEFAULTS,...(S&&S.cfg?S.cfg:{})};}
+function sanitize(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 const POS  = ['Forward','Mid (P)','Mid (C)','Defense'];
 const PKEY = {'Forward':'fwd','Mid (P)':'mp','Mid (C)':'mc','Defense':'def'};
 const PCLS = {'Forward':'cfwd','Mid (P)':'cmp','Mid (C)':'cmc','Defense':'cdef'};
@@ -1928,13 +1929,13 @@ function renderPrint(){
     // Header
     let h=`<div class="print-copy-card">
       <div class="pc-header">
-        <div class="pc-title">⚡ ${cfg.teamName.toUpperCase()} &nbsp;·&nbsp; Game ${gid} &nbsp;·&nbsp; ${g.date}</div>
+        <div class="pc-title">⚡ ${sanitize(cfg.teamName).toUpperCase()} &nbsp;·&nbsp; Game ${gid} &nbsp;·&nbsp; ${g.date}</div>
         <div class="pc-meta">${vs} &nbsp;·&nbsp; ${g.loc} ${g.field} &nbsp;·&nbsp; Arrive: ${g.arrive} &nbsp;·&nbsp; Kickoff: ${g.time} &nbsp;·&nbsp; Jersey: <strong>${jersey}</strong></div>`;
     if(caps.length)h+=`<div class="pc-meta">Captains: <strong>${caps.join(' & ')}</strong></div>`;
     if(gd.done&&gd.score){
-      h+=`<div class="pc-meta">Final Score: <strong>${cfg.teamName} ${gd.score[0]} – ${g.opp} ${gd.score[1]}</strong></div>`;
+      h+=`<div class="pc-meta">Final Score: <strong>${sanitize(cfg.teamName)} ${gd.score[0]} – ${sanitize(g.opp)} ${gd.score[1]}</strong></div>`;
     }else{
-      h+=`<div class="pc-meta">Score: ${cfg.teamName} <span style="display:inline-block;min-width:24px;height:14px;border:1.5px solid #555;margin:0 3px;vertical-align:middle"></span> – ${g.opp} <span style="display:inline-block;min-width:24px;height:14px;border:1.5px solid #555;margin:0 3px;vertical-align:middle"></span></div>`;
+      h+=`<div class="pc-meta">Score: ${sanitize(cfg.teamName)} <span style="display:inline-block;min-width:24px;height:14px;border:1.5px solid #555;margin:0 3px;vertical-align:middle"></span> – ${g.opp} <span style="display:inline-block;min-width:24px;height:14px;border:1.5px solid #555;margin:0 3px;vertical-align:middle"></span></div>`;
     }
     h+=`</div>`;
 
@@ -1983,7 +1984,7 @@ function openPhoneView(){
   const cfg=getCfg();
   let h=`<div style="font-family:Arial,sans-serif;max-width:440px;margin:0 auto;padding:8px">`;
   h+=`<div style="border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:12px">
-    <div style="font-size:15px;font-weight:700">⚡ ${cfg.teamName.toUpperCase()} · Game ${gid} · ${g.date}</div>
+    <div style="font-size:15px;font-weight:700">⚡ ${sanitize(cfg.teamName).toUpperCase()} · Game ${gid} · ${g.date}</div>
     <div style="font-size:12px;color:#444;margin-top:2px">${vs} · ${g.loc} · ${g.field}</div>
     <div style="font-size:12px;color:#444">Arrive ${g.arrive} · Kickoff ${g.time} · Jersey: <strong>${jersey}</strong></div>
     ${caps.length?`<div style="font-size:12px;color:#444">Captains: <strong>${caps.join(' & ')}</strong></div>`:''}
@@ -2095,10 +2096,10 @@ function renderSettings(){
     if(tea)tea.style.display='none';
     if(tra)tra.innerHTML=`
       <div class="flex gap16 wrap" style="margin-top:8px">
-        <div><div class="xs muted" style="text-transform:uppercase;letter-spacing:.06em;font-weight:500">Team Name</div><div style="font-size:14px;font-weight:500;margin-top:2px">${cfg.teamName}</div></div>
-        <div><div class="xs muted" style="text-transform:uppercase;letter-spacing:.06em;font-weight:500">Team Code</div><div style="font-size:14px;font-weight:500;margin-top:2px">${cfg.teamCode}</div></div>
-        <div><div class="xs muted" style="text-transform:uppercase;letter-spacing:.06em;font-weight:500">Location</div><div style="font-size:14px;font-weight:500;margin-top:2px">${cfg.teamLoc}</div></div>
-        <div><div class="xs muted" style="text-transform:uppercase;letter-spacing:.06em;font-weight:500">Season</div><div style="font-size:14px;font-weight:500;margin-top:2px">${cfg.season}</div></div>
+        <div><div class="xs muted" style="text-transform:uppercase;letter-spacing:.06em;font-weight:500">Team Name</div><div style="font-size:14px;font-weight:500;margin-top:2px">${sanitize(cfg.teamName)}</div></div>
+        <div><div class="xs muted" style="text-transform:uppercase;letter-spacing:.06em;font-weight:500">Team Code</div><div style="font-size:14px;font-weight:500;margin-top:2px">${sanitize(cfg.teamCode)}</div></div>
+        <div><div class="xs muted" style="text-transform:uppercase;letter-spacing:.06em;font-weight:500">Location</div><div style="font-size:14px;font-weight:500;margin-top:2px">${sanitize(cfg.teamLoc)}</div></div>
+        <div><div class="xs muted" style="text-transform:uppercase;letter-spacing:.06em;font-weight:500">Season</div><div style="font-size:14px;font-weight:500;margin-top:2px">${sanitize(cfg.season)}</div></div>
       </div>`;
   }else{
     if(tea){
