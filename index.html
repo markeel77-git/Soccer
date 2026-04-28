@@ -1052,24 +1052,29 @@ hr { border: none; border-top: 1px solid var(--grey-200); margin: 24px 0; }
   <div class="section-title">Settings</div>
   <div class="card-group mb16">
     <div class="card">
-      <div class="card-label">Team</div>
-      <div class="flex gap16 wrap" style="align-items:flex-end">
-        <div><label>Team Name</label><input type="text" id="cfgTeamName" placeholder="Thunder" style="width:160px"></div>
-        <div><label>Team Code</label><input type="text" id="cfgTeamCode" placeholder="CF09A" style="width:120px"></div>
-        <div><label>Location</label><input type="text" id="cfgTeamLoc" placeholder="Cedar Falls, IA" style="width:180px"></div>
-        <div><label>Season</label><input type="text" id="cfgSeason" placeholder="Spring 2026" style="width:140px"></div>
-        <button class="btn btn-primary btn-sm" onclick="saveTeamCfg()" style="margin-top:22px">Save</button>
+      <div class="card-label">Roster <button class="btn btn-sm" id="rosterLockBtn" onclick="toggleRosterLock()">🔒 Locked</button></div>
+      <div id="rosterList"></div>
+      <div id="rosterEditArea" style="display:none">
+        <hr>
+        <div class="flex gap8 wrap" style="align-items:flex-end">
+          <div><label>Add Player</label><input type="text" id="newName" placeholder="First name" style="width:160px"></div>
+          <button class="btn btn-primary btn-sm" onclick="addPlayer()" style="margin-top:22px">+ Add</button>
+        </div>
       </div>
     </div>
   </div>
   <div class="card-group mb16">
     <div class="card">
-      <div class="card-label">Roster</div>
-      <div id="rosterList"></div>
-      <hr>
-      <div class="flex gap8 wrap" style="align-items:flex-end">
-        <div><label>Add Player</label><input type="text" id="newName" placeholder="First name" style="width:160px"></div>
-        <button class="btn btn-primary btn-sm" onclick="addPlayer()" style="margin-top:22px">+ Add</button>
+      <div class="card-label">Team Details <button class="btn btn-sm" id="teamLockBtn" onclick="toggleTeamLock()">🔒 Locked</button></div>
+      <div id="teamReadArea"></div>
+      <div id="teamEditArea" style="display:none">
+        <div class="flex gap16 wrap" style="align-items:flex-end;margin-top:4px">
+          <div><label>Team Name</label><input type="text" id="cfgTeamName" placeholder="Thunder" style="width:160px"></div>
+          <div><label>Team Code</label><input type="text" id="cfgTeamCode" placeholder="CF09A" style="width:120px"></div>
+          <div><label>Location</label><input type="text" id="cfgTeamLoc" placeholder="Cedar Falls, IA" style="width:180px"></div>
+          <div><label>Season</label><input type="text" id="cfgSeason" placeholder="Spring 2026" style="width:140px"></div>
+          <button class="btn btn-primary btn-sm" onclick="saveTeamCfg()" style="margin-top:22px">Save</button>
+        </div>
       </div>
     </div>
   </div>
@@ -2044,12 +2049,16 @@ function renderSchedule(){
 }
 
 // ══════════════════════════════════════
-// ROSTER PAGE
+// SETTINGS PAGE
 // ══════════════════════════════════════
+let _rosterLocked=true;
+let _teamLocked=true;
+
 function renderRoster(){
   document.getElementById('rosterList').innerHTML=
-    `<div class="roster-chips">` +
-    S.roster.map(p=>`<div class="roster-chip">${p}<button onclick="removePlayer('${p}')">✕</button></div>`).join('')+`</div>`;
+    `<div class="roster-chips">`+
+    S.roster.map(p=>`<div class="roster-chip">${p}${_rosterLocked?'':'<button onclick="removePlayer(\''+p+'\')">✕</button>'}</div>`).join('')+
+    `</div>`;
 }
 function addPlayer(){
   const i=document.getElementById('newName'),n=i.value.trim();
@@ -2059,17 +2068,48 @@ function addPlayer(){
   i.value='';save();renderRoster();
 }
 function removePlayer(name){
-  if(!confirm(`Remove ${name}? Stats remain saved.`))return;
+  if(!confirm(`Remove ${name}? Their stats will remain on the Season Stats page but they won't appear in future rotations.`))return;
   S.roster=S.roster.filter(p=>p!==name);save();renderRoster();
 }
+function toggleRosterLock(){_rosterLocked=!_rosterLocked;renderSettings();}
+function toggleTeamLock(){_teamLocked=!_teamLocked;renderSettings();}
+
 function renderSettings(){
-  renderRoster();
-  updateSyncMsg();
   const cfg=getCfg();
-  document.getElementById('cfgTeamName').value=cfg.teamName;
-  document.getElementById('cfgTeamCode').value=cfg.teamCode;
-  document.getElementById('cfgTeamLoc').value=cfg.teamLoc;
-  document.getElementById('cfgSeason').value=cfg.season;
+
+  // Roster section
+  renderRoster();
+  const rlb=document.getElementById('rosterLockBtn');
+  const rea=document.getElementById('rosterEditArea');
+  if(rlb){rlb.textContent=_rosterLocked?'🔒 Locked':'🔓 Unlocked';rlb.className='btn btn-sm '+(_rosterLocked?'btn-lock-on':'btn-lock-off');}
+  if(rea)rea.style.display=_rosterLocked?'none':'';
+
+  // Team Details section
+  const tlb=document.getElementById('teamLockBtn');
+  const tea=document.getElementById('teamEditArea');
+  const tra=document.getElementById('teamReadArea');
+  if(tlb){tlb.textContent=_teamLocked?'🔒 Locked':'🔓 Unlocked';tlb.className='btn btn-sm '+(_teamLocked?'btn-lock-on':'btn-lock-off');}
+  if(_teamLocked){
+    if(tea)tea.style.display='none';
+    if(tra)tra.innerHTML=`
+      <div class="flex gap16 wrap" style="margin-top:8px">
+        <div><div class="xs muted" style="text-transform:uppercase;letter-spacing:.06em;font-weight:500">Team Name</div><div style="font-size:14px;font-weight:500;margin-top:2px">${cfg.teamName}</div></div>
+        <div><div class="xs muted" style="text-transform:uppercase;letter-spacing:.06em;font-weight:500">Team Code</div><div style="font-size:14px;font-weight:500;margin-top:2px">${cfg.teamCode}</div></div>
+        <div><div class="xs muted" style="text-transform:uppercase;letter-spacing:.06em;font-weight:500">Location</div><div style="font-size:14px;font-weight:500;margin-top:2px">${cfg.teamLoc}</div></div>
+        <div><div class="xs muted" style="text-transform:uppercase;letter-spacing:.06em;font-weight:500">Season</div><div style="font-size:14px;font-weight:500;margin-top:2px">${cfg.season}</div></div>
+      </div>`;
+  }else{
+    if(tea){
+      tea.style.display='';
+      document.getElementById('cfgTeamName').value=cfg.teamName;
+      document.getElementById('cfgTeamCode').value=cfg.teamCode;
+      document.getElementById('cfgTeamLoc').value=cfg.teamLoc;
+      document.getElementById('cfgSeason').value=cfg.season;
+    }
+    if(tra)tra.innerHTML='';
+  }
+
+  updateSyncMsg();
 }
 function saveTeamCfg(){
   const n=document.getElementById('cfgTeamName').value.trim();
@@ -2082,7 +2122,8 @@ function saveTeamCfg(){
     teamLoc:l||CFG_DEFAULTS.teamLoc,
     season:s||CFG_DEFAULTS.season
   };
-  save();renderHeader();showToast('Team settings saved.');
+  _teamLocked=true;
+  save();renderHeader();renderSettings();showToast('Team details saved.');
 }
 
 // ══════════════════════════════════════
@@ -2097,7 +2138,15 @@ function importData(){
   const i=document.createElement('input');i.type='file';i.accept='.json';
   i.onchange=e=>{const r=new FileReader();r.onload=ev=>{try{const d=JSON.parse(ev.target.result);if(confirm('Replace all data?')){S=d;save();location.reload();}}catch(e){alert('Invalid JSON');}};r.readAsText(e.target.files[0]);};i.click();
 }
-function resetAll(){if(confirm('Reset ALL data?')){localStorage.removeItem('thunder_v2');S=fresh();save();location.reload();}}
+function resetAll(){
+  const hasToken=!!getToken();
+  const msg='RESET ALL DATA\n\nThis will permanently erase:\n  • All game rotations and scores\n  • All season stats and captain history\n  • Your roster\n\n'
+    +(hasToken
+      ?'Your coach token is active, so cloud data on Cloudflare will also be wiped.\n\n'
+      :'No coach token is saved, so only your local browser data will be cleared — cloud data will remain.\n\n')
+    +'This cannot be undone. Are you sure?';
+  if(confirm(msg)){localStorage.removeItem('thunder_v2');S=fresh();save();location.reload();}
+}
 function resetGamePlan(){
   const gd=S.games[String(S.gid)];
   const isDone=!!(gd&&gd.done);
