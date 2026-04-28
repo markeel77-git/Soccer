@@ -1038,6 +1038,7 @@ hr { border: none; border-top: 1px solid var(--grey-200); margin: 24px 0; }
           <input type="password" id="coachTokenInput" placeholder="Enter token to enable saving" style="width:240px">
         </div>
         <button class="btn btn-primary btn-sm" onclick="saveCoachToken()" style="margin-top:22px">Save Token</button>
+        <button class="btn btn-secondary btn-sm" onclick="forcePullFromCloud()" style="margin-top:22px">Force Sync</button>
       </div>
       <div class="xs muted mt8" id="syncStatusMsg">Checking sync…</div>
     </div>
@@ -1184,6 +1185,18 @@ async function syncFromCloud(){
     setSyncBadge('ok');
   }
   updateSyncMsg();
+}
+
+async function forcePullFromCloud(){
+  setSyncBadge('syncing');
+  const cloud=await pullFromCloud();
+  if(!cloud){setSyncBadge('offline');showToast('Could not reach cloud.');return;}
+  S=cloud;
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(S));
+  setSyncBadge('updated');
+  renderPlan();
+  updateSyncMsg();
+  showToast('Loaded latest data from cloud.');
 }
 
 function updateSyncMsg(){
