@@ -1066,7 +1066,7 @@ hr { border: none; border-top: 1px solid var(--grey-200); margin: 24px 0; }
       <div class="flex gap8 wrap" style="align-items:flex-end">
         <div>
           <label>Coach Token (write access)</label>
-          <input type="password" id="coachTokenInput" placeholder="Enter token to enable saving" style="width:240px">
+          <input type="password" id="coachTokenInput" placeholder="Enter token to enable saving" style="width:240px" autocomplete="new-password">
         </div>
         <button class="btn btn-primary btn-sm" onclick="saveCoachToken()" style="margin-top:22px">Save Token</button>
         <button class="btn btn-secondary btn-sm" onclick="forcePullFromCloud()" style="margin-top:22px">Force Sync</button>

@@ -9,8 +9,6 @@ function isValidSchema(d) {
 
 const ALLOWED_ORIGINS = [
   'https://soccer.theiehls.com',
-  'http://localhost',
-  'http://127.0.0.1',
 ];
 
 export default {
@@ -47,6 +45,7 @@ export default {
         let body, data;
         try {
           body = await request.text();
+          if (body.length > 500_000) return new Response('Payload Too Large', { status: 413, headers: cors });
           data = JSON.parse(body);
         } catch {
           return new Response('Bad Request', { status: 400, headers: cors });
