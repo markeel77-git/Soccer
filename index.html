@@ -146,18 +146,16 @@ header {
 .tab {
   padding: 12px 0;
   margin-right: 32px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--text-secondary);
   cursor: pointer;
   border-bottom: 2px solid transparent;
   transition: color 0.15s, border-color 0.15s;
   white-space: nowrap;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.04em;
   user-select: none;
   text-transform: uppercase;
-  font-size: 13px;
-  letter-spacing: 0.04em;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
@@ -207,7 +205,6 @@ header {
   padding: 24px;
   margin-bottom: 1px;
 }
-.card:first-child { border-radius: 0; }
 .card-group { border: 1px solid var(--grey-200); margin-bottom: 24px; }
 .card-group .card { border: none; border-bottom: 1px solid var(--grey-200); margin-bottom: 0; }
 .card-group .card:last-child { border-bottom: none; }
@@ -1234,10 +1231,12 @@ function capCounts(){
   return c;
 }
 function suggestCaps(gid){
-  const gd=S.games[String(gid)];
-  if(gd&&gd.caps&&gd.caps.length===2)return gd.caps;
-  const att=getAtt(gid);const cc=capCounts();
-  return [...att].map(p=>({p,c:cc[p]||0}))
+  // Always compute algorithmically, excluding this game's own capLog entry so confirmed
+  // caps don't inflate the count and bias the next suggestion.
+  const c={};S.roster.forEach(p=>c[p]=0);
+  (S.capLog||[]).filter(e=>e.gid!==gid).forEach(({caps})=>caps.forEach(p=>{if(c[p]!==undefined)c[p]++;}));
+  const att=getAtt(gid);
+  return [...att].map(p=>({p,c:c[p]||0}))
     .sort((a,b)=>a.c!==b.c?a.c-b.c:S.roster.indexOf(a.p)-S.roster.indexOf(b.p))
     .slice(0,2).map(x=>x.p);
 }
@@ -1552,9 +1551,10 @@ function renderCaps(locked){
   }
 
   // Editable: show picker — each player is a toggleable button, select exactly 2
-  const suggested=suggestCaps(S.gid);
-  // Current working selection: use assigned caps if set, else suggestion
-  const current=assigned?[...gd.caps]:[...suggested];
+  // Suggestion is computed once here and stays frozen for the whole picker session
+  // so the ⭐ never moves as the user taps players.
+  _capPickerSuggested=suggestCaps(S.gid);
+  _capPickerSelection=assigned?[...gd.caps]:[..._capPickerSuggested];
 
   document.getElementById('capNote').textContent=assigned?'Assigned':'Suggested — tap to change';
   document.getElementById('capNote').className='badge '+(assigned?'badge-green':'badge-warn');
@@ -1565,12 +1565,12 @@ function renderCaps(locked){
     <div class="flex gap8 wrap" id="capActions"></div>
     <div class="xs muted mt8">Game 1: Evan & Beckem. Rotates so everyone leads before anyone repeats.</div>`;
 
-  _capPickerSelection=null; // reset so renderCapPicker initializes from current game state
-  renderCapPicker(att, current, suggested, cc);
+  renderCapPicker(att, cc);
 }
 
-function renderCapPicker(att, selected, suggested, cc){
-  if(_capPickerSelection===null) _capPickerSelection=[...selected];
+function renderCapPicker(att, cc){
+  const selected=_capPickerSelection||[];
+  const suggested=_capPickerSuggested||[];
   const grid=document.getElementById('capPickerGrid');
   if(!grid)return;
   grid.innerHTML=att.map(p=>{
@@ -1595,39 +1595,30 @@ function renderCapPicker(att, selected, suggested, cc){
   }
 }
 
-// Temporary selection state (not persisted until Confirm)
+// Temporary picker state (not persisted until Confirm)
 let _capPickerSelection = null;
+let _capPickerSuggested = null;
 
 function toggleCapPick(p){
-  const att=getAtt(S.gid);
-  const gd=S.games[String(S.gid)]||{};
-  const cc=capCounts();
-  const suggested=suggestCaps(S.gid);
-  if(!_capPickerSelection){
-    // Initialize from current state
-    _capPickerSelection=gd.caps?[...gd.caps]:[...suggested];
-  }
+  if(!_capPickerSelection)return; // picker not open
   if(_capPickerSelection.includes(p)){
     _capPickerSelection=_capPickerSelection.filter(x=>x!==p);
   }else{
-    if(_capPickerSelection.length>=2) _capPickerSelection.shift(); // replace oldest
+    if(_capPickerSelection.length>=2)_capPickerSelection.shift();
     _capPickerSelection.push(p);
   }
-  renderCapPicker(att, _capPickerSelection, suggested, cc);
+  renderCapPicker(getAtt(S.gid),capCounts());
 }
 
 function resetCapPicker(){
-  _capPickerSelection=null;
-  const att=getAtt(S.gid);
-  const cc=capCounts();
-  const suggested=suggestCaps(S.gid);
-  renderCapPicker(att, suggested, suggested, cc);
+  _capPickerSelection=[...(_capPickerSuggested||[])];
+  renderCapPicker(getAtt(S.gid),capCounts());
 }
 
 function confirmCapsFromPicker(){
   if(!_capPickerSelection||_capPickerSelection.length!==2)return;
   const caps=[..._capPickerSelection];
-  _capPickerSelection=null;
+  _capPickerSelection=null;_capPickerSuggested=null;
   S.games[String(S.gid)]=S.games[String(S.gid)]||{};
   S.games[String(S.gid)].caps=caps;
   S.capLog=S.capLog.filter(x=>x.gid!==S.gid);
@@ -1636,16 +1627,10 @@ function confirmCapsFromPicker(){
   if(document.getElementById('emailBody'))renderEmailCard();
 }
 
-function confirmCaps(caps){
-  // Legacy — keep for safety
-  S.games[String(S.gid)]=S.games[String(S.gid)]||{};S.games[String(S.gid)].caps=caps;
-  if(!S.capLog.find(x=>x.gid===S.gid))S.capLog.push({gid:S.gid,caps});
-  save();renderCaps(false);if(document.getElementById('emailBody'))renderEmailCard();
-}
 function reassignCaps(){
   const gd=S.games[String(S.gid)];
   if(gd){delete gd.caps;S.capLog=S.capLog.filter(x=>x.gid!==S.gid);}
-  _capPickerSelection=null;
+  _capPickerSelection=null;_capPickerSuggested=null;
   save();renderCaps(false);
 }
 
@@ -1665,7 +1650,7 @@ function toggleAtt(p){
   if(gd.rots&&!gd.locked)delete gd.rots;
   save();renderPlan();
 }
-function allPresent(){const gd=S.games[String(S.gid)]=S.games[String(S.gid)]||{};gd.att=[...S.roster];save();renderAttGrid(false);}
+function allPresent(){const gd=S.games[String(S.gid)]=S.games[String(S.gid)]||{};gd.att=[...S.roster];save();renderPlan();}
 
 // ── Generate ───────────────────────────
 function doGenerate(seedOverride){
@@ -2041,7 +2026,7 @@ function resetGamePlan(){
     delete gd.done;
   }
   S.capLog=S.capLog.filter(x=>x.gid!==S.gid);
-  _capPickerSelection=null;
+  _capPickerSelection=null;_capPickerSuggested=null;
   save();renderPlan();
 }
 
