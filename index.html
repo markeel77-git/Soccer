@@ -1193,6 +1193,15 @@ function setSyncBadge(state){
   b.className=`sync-dot ${c.cls}`;
   b.innerHTML=`<span class="dot"></span>${c.label}`;
   b.style.display='';
+  if(state==='unauth'){
+    b.style.cursor='pointer';
+    b.title='Click to go to Settings';
+    b.onclick=()=>{const t=document.querySelector('.tab[onclick*="settings"]');nav('settings',t);};
+  }else{
+    b.style.cursor='';
+    b.title='';
+    b.onclick=null;
+  }
 }
 
 async function pullFromCloud(){
@@ -1280,7 +1289,13 @@ function saveCoachToken(){
   if(v==='••••••••')return;
   setToken(v);
   updateSyncMsg();
-  showToast(v?'Token saved — coach mode active.':'Token cleared — view-only mode.');
+  if(!v){showToast('Token cleared — view-only mode.');return;}
+  setSyncBadge('syncing');
+  pushToCloud(S).then(result=>{
+    if(result==='ok'){setSyncBadge('ok');showToast('Token valid — coach mode active.');}
+    else if(result==='unauthorized'){setSyncBadge('unauth');showToast('Token invalid — check and re-enter.');}
+    else{setSyncBadge('offline');showToast('Token saved — could not reach cloud to verify.');}
+  }).catch(()=>{setSyncBadge('offline');showToast('Token saved — network error.');});
 }
 
 function load(){try{const s=localStorage.getItem(STORAGE_KEY);if(s)return JSON.parse(s);}catch(e){}return fresh();}
