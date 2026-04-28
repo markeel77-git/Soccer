@@ -1098,6 +1098,7 @@ hr { border: none; border-top: 1px solid var(--grey-200); margin: 24px 0; }
 // ══════════════════════════════════════
 const CFG_DEFAULTS={teamName:'Thunder',teamCode:'CF09A',teamLoc:'Cedar Falls, IA',season:'Spring 2026'};
 function getCfg(){return{...CFG_DEFAULTS,...(S&&S.cfg?S.cfg:{})};}
+const POS  = ['Forward','Mid (P)','Mid (C)','Defense'];
 const PKEY = {'Forward':'fwd','Mid (P)':'mp','Mid (C)':'mc','Defense':'def'};
 const PCLS = {'Forward':'cfwd','Mid (P)':'cmp','Mid (C)':'cmc','Defense':'cdef'};
 const PLBL = {'Forward':'Forward','Mid (P)':'P-Mid','Mid (C)':'C-Mid','Defense':'Defense'};
