@@ -909,7 +909,6 @@ hr { border: none; border-top: 1px solid var(--grey-200); margin: 24px 0; }
     <span class="h-eyebrow" id="hEyebrow">U9 · CF09A</span>
   </div>
   <div class="h-right">
-    <div id="hbadge" class="h-badge">Game 2</div>
     <div id="syncBadge" class="sync-dot" style="display:none"></div>
   </div>
 </header>
@@ -1498,7 +1497,6 @@ function renderPlan(){
   document.getElementById('planTitle').textContent=vs;
   document.getElementById('planMeta').innerHTML=
     `<span>${g.day}</span><span class="meta-sep">·</span><span>${g.time}</span><span class="meta-sep">·</span><span>${g.loc}</span><span class="meta-sep">·</span><span>${g.field}</span>`;
-  document.getElementById('hbadge').textContent=`Game ${S.gid} · ${g.date}`;
   // Reset button — visible whenever this game has any data
 
   // Jersey chip — Home=Gray, Away=Blue
