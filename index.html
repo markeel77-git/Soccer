@@ -142,6 +142,29 @@ header {
   border-radius: 30px;
   border: 1px solid var(--border-secondary);
 }
+.sync-dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 30px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  border: 1px solid transparent;
+}
+.sync-dot .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.sync-dot.sd-ok     { background: #E8F8EE; border-color: #70C880; color: #1A5A2A; }
+.sync-dot.sd-ok     .dot { background: #007D48; }
+.sync-dot.sd-syncing{ background: var(--grey-100); border-color: var(--border-secondary); color: var(--text-secondary); }
+.sync-dot.sd-syncing .dot { background: var(--grey-300); animation: pulse 1s infinite; }
+.sync-dot.sd-warn   { background: #FFFBE8; border-color: #E8C040; color: #6A4A00; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
 
 /* ── NAV TABS ── */
 .tabs {
@@ -887,7 +910,7 @@ hr { border: none; border-top: 1px solid var(--grey-200); margin: 24px 0; }
   </div>
   <div class="h-right">
     <div id="hbadge" class="h-badge">Game 2</div>
-    <div id="syncBadge" class="h-badge" style="display:none"></div>
+    <div id="syncBadge" class="sync-dot" style="display:none"></div>
   </div>
 </header>
 
@@ -1171,11 +1194,17 @@ function setToken(t){t?localStorage.setItem(TOKEN_KEY,t):localStorage.removeItem
 
 function setSyncBadge(state){
   const b=document.getElementById('syncBadge');if(!b)return;
-  const map={ok:'☁ Synced',syncing:'⟳ Syncing',offline:'⊘ Offline',updated:'↓ Updated'};
-  const txt=map[state]||'';
-  b.textContent=txt;
-  b.style.display=txt?'':'none';
-  b.style.color=state==='offline'?'#AA0004':state==='updated'?'#007D48':'';
+  const cfg={
+    ok:      {cls:'sd-ok',     label:'Synced'},
+    updated: {cls:'sd-ok',     label:'Updated'},
+    syncing: {cls:'sd-syncing',label:'Syncing'},
+    offline: {cls:'sd-warn',   label:'⚠ Offline'},
+  };
+  const c=cfg[state];
+  if(!c){b.style.display='none';return;}
+  b.className=`sync-dot ${c.cls}`;
+  b.innerHTML=`<span class="dot"></span>${c.label}`;
+  b.style.display='';
 }
 
 async function pullFromCloud(){
