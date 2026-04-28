@@ -1270,7 +1270,7 @@ function updateSyncMsg(){
 
 function renderHeader(){
   const cfg=getCfg();
-  document.title=`${cfg.teamName} — Sub Tracker`;
+  document.title=`Sub Tracker — ${cfg.teamName}`;
   const pb=document.getElementById('promoBar');
   if(pb)pb.textContent=`${cfg.teamName} U9 · ${cfg.teamCode} · ${cfg.teamLoc} · ${cfg.season}`;
   const hn=document.getElementById('hTeamName');
