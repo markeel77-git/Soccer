@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Thunder — Sub Tracker</title>
+<title>Sub Tracker</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23111111'/><text x='16' y='24' text-anchor='middle' font-size='22'>⚽</text></svg>">
 <style>
 /* ── FONTS ── */
@@ -44,7 +44,7 @@
   --font-body:    'Helvetica Neue', Helvetica, Arial, sans-serif;
   --font-mono:    'DM Mono', 'Courier New', monospace;
 
-  /* Thunder accent (used ONLY for header branding — UI stays monochromatic) */
+  /* Team accent (used ONLY for header branding — UI stays monochromatic) */
   --bolt: #F5C518;
   --bolt-d: #D4A810;
 
@@ -882,13 +882,13 @@ hr { border: none; border-top: 1px solid var(--grey-200); margin: 24px 0; }
 <body>
 
 <!-- Promo bar -->
-<div id="promoBar" class="promo-bar no-print">Thunder U9 · CF09A · Cedar Falls, IA · Spring 2026</div>
+<div id="promoBar" class="promo-bar no-print">Sub Tracker</div>
 
 <!-- Header -->
 <header>
   <div class="h-left">
     <div class="h-wordmark">⚽ SUB TRACKER</div>
-    <div class="h-submark"><span class="bolt">⚡</span> <span id="hTeamName">THUNDER</span></div>
+    <div class="h-submark"><span class="bolt">⚡</span> <span id="hTeamName">—</span></div>
   </div>
   <div class="h-right">
     <div id="syncBadge" class="sync-dot" style="display:none"></div>
@@ -973,7 +973,7 @@ hr { border: none; border-top: 1px solid var(--grey-200); margin: 24px 0; }
 
 <!-- ══ SEASON ══ -->
 <div id="page-season" class="page">
-  <div id="seasonEyebrow" class="section-eyebrow">Thunder · CF09A</div>
+  <div id="seasonEyebrow" class="section-eyebrow">—</div>
   <div class="section-title">Season Stats</div>
   <div class="card-group mb16">
     <div class="card"><div id="seasonSum" class="flex gap16 wrap"></div></div>
@@ -1008,7 +1008,7 @@ hr { border: none; border-top: 1px solid var(--grey-200); margin: 24px 0; }
 
 <!-- ══ PRINT ══ -->
 <div id="page-print" class="page">
-  <div id="printEyebrow" class="section-eyebrow no-print">Thunder · CF09A</div>
+  <div id="printEyebrow" class="section-eyebrow no-print">—</div>
   <div class="section-title no-print">Game Day Sub Sheet</div>
   <div class="flex gap8 wrap mb16 no-print" style="align-items:flex-end">
     <div>
@@ -1030,7 +1030,7 @@ hr { border: none; border-top: 1px solid var(--grey-200); margin: 24px 0; }
 
 <!-- ══ SETTINGS ══ -->
 <div id="page-settings" class="page">
-  <div id="settingsEyebrow" class="section-eyebrow">Thunder · CF09A</div>
+  <div id="settingsEyebrow" class="section-eyebrow">—</div>
   <div class="section-title">Settings</div>
   <div class="card-group mb16">
     <div class="card">
@@ -1270,6 +1270,7 @@ function updateSyncMsg(){
 
 function renderHeader(){
   const cfg=getCfg();
+  document.title=`${cfg.teamName} — Sub Tracker`;
   const pb=document.getElementById('promoBar');
   if(pb)pb.textContent=`${cfg.teamName} U9 · ${cfg.teamCode} · ${cfg.teamLoc} · ${cfg.season}`;
   const hn=document.getElementById('hTeamName');
@@ -1544,7 +1545,7 @@ function renderPlan(){
     }
     document.getElementById('doneCard').style.display=locked&&!done?'block':'none';
     if(locked&&!done)renderScoreEntry();
-    if(done){renderScoreDone(gd.score);showAlerts([{t:'a-ok',msg:`Game ${S.gid} complete — ${vs}. Score: Thunder ${gd.score?gd.score[0]:'?'} – ${gd.score?gd.score[1]:'?'}.`}]);}
+    if(done){renderScoreDone(gd.score);showAlerts([{t:'a-ok',msg:`Game ${S.gid} complete — ${vs}. Score: ${getCfg().teamName} ${gd.score?gd.score[0]:'?'} – ${gd.score?gd.score[1]:'?'}.`}]);}
     renderEmailCard();
     document.getElementById('emailCard').style.display='block';
   }else{
@@ -1558,9 +1559,10 @@ function renderPlan(){
 }
 
 function renderScoreEntry(){
+  const cfg=getCfg();
   document.getElementById('scoreDisplay').innerHTML=`
     <div class="score-row">
-      <div><label>Thunder Score</label><input type="number" id="scoreUs" class="score-in" min="0" value="0"></div>
+      <div><label>${cfg.teamName} Score</label><input type="number" id="scoreUs" class="score-in" min="0" value="0"></div>
       <div style="font-size:24px;font-weight:500;color:var(--text-secondary);padding-bottom:8px;align-self:flex-end">–</div>
       <div><label>Opponent Score</label><input type="number" id="scoreThem" class="score-in" min="0" value="0"></div>
       <div style="align-self:flex-end;padding-bottom:2px"><button class="btn btn-primary btn-sm" onclick="markDone()">Mark Game Done</button></div>
@@ -1573,7 +1575,7 @@ function renderScoreDone(score){
   document.getElementById('doneCard').style.display='block';
   document.getElementById('scoreDisplay').innerHTML=`
     <div class="flex gap16 wrap" style="align-items:center;margin-bottom:16px">
-      <div class="score-display">THUNDER ${sc[0]} – ${sc[1]}</div>
+      <div class="score-display">${getCfg().teamName.toUpperCase()} ${sc[0]} – ${sc[1]}</div>
       <button class="btn btn-ghost btn-sm" onclick="editScore()">Edit Score</button>
     </div>
     <div style="border-top:1px solid var(--grey-200);padding-top:16px;margin-top:4px">
@@ -1583,10 +1585,11 @@ function renderScoreDone(score){
 }
 
 function editScore(){
+  const cfg=getCfg();
   const gd=S.games[String(S.gid)];if(!gd)return;const sc=gd.score||[0,0];
   document.getElementById('scoreDisplay').innerHTML=`
     <div class="score-row">
-      <div><label>Thunder Score</label><input type="number" id="scoreUs" class="score-in" min="0" value="${sc[0]}"></div>
+      <div><label>${cfg.teamName} Score</label><input type="number" id="scoreUs" class="score-in" min="0" value="${sc[0]}"></div>
       <div style="font-size:24px;font-weight:500;color:var(--text-secondary);padding-bottom:8px;align-self:flex-end">–</div>
       <div><label>Opponent Score</label><input type="number" id="scoreThem" class="score-in" min="0" value="${sc[1]}"></div>
       <div style="align-self:flex-end;padding-bottom:2px;display:flex;gap:8px">
@@ -2158,7 +2161,7 @@ function saveTeamCfg(){
 function exportData(){
   const b=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(b);
-  a.download=`thunder-${new Date().toISOString().slice(0,10)}.json`;a.click();
+  a.download=`${getCfg().teamName.toLowerCase().replace(/[^a-z0-9]+/g,'-')}-${new Date().toISOString().slice(0,10)}.json`;a.click();
 }
 function importData(){
   const i=document.createElement('input');i.type='file';i.accept='.json';
