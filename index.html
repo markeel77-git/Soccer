@@ -123,27 +123,7 @@ header {
   margin-left: 4px;
 }
 .h-submark .bolt { color: var(--bolt); }
-.h-eyebrow {
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  border-left: 1px solid var(--border-secondary);
-  padding-left: 12px;
-  margin-left: 4px;
-}
 .h-right { display: flex; align-items: center; gap: 8px; }
-.h-badge {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 500;
-  background: var(--grey-100);
-  color: var(--text-secondary);
-  padding: 4px 12px;
-  border-radius: 30px;
-  border: 1px solid var(--border-secondary);
-}
 .sync-dot {
   display: inline-flex;
   align-items: center;
@@ -745,7 +725,7 @@ header {
 }
 
 /* ── INPUTS ── */
-input[type=text], input[type=number], select {
+input[type=text], input[type=number], input[type=password], select {
   font-family: var(--font-body);
   font-size: 14px;
   font-weight: 400;
@@ -888,7 +868,8 @@ hr { border: none; border-top: 1px solid var(--grey-200); margin: 24px 0; }
   header { padding: 0 16px; }
   .tabs { padding: 0 16px; }
   .page { padding: 24px 16px; }
-  .h-eyebrow { display: none; }
+  .h-wordmark { font-size: 18px; }
+  .h-submark { font-size: 17px; padding-left: 12px; }
   .att-grid { grid-template-columns: repeat(4, 1fr); }
   .sched-grid { grid-template-columns: repeat(2, 1fr); }
   .print-copies { grid-template-columns: 1fr; }
@@ -1181,7 +1162,7 @@ function fresh(){
   return {
     roster:[...ROSTER0],ps:buildG1Stats(),cfg:{},
     capLog:[{gid:1,caps:['Evan','Beckem']}],
-    games:{'1':{done:true,att:[...ROSTER0],rots:G1R,rpq:2,locked:true,score:[0,0],caps:['Evan','Beckem']}},
+    games:{'1':{done:true,att:[...ROSTER0],rots:G1R,rpq:2,locked:true,score:[7,1],caps:['Evan','Beckem']}},
     gid:2
   };
 }
@@ -1227,6 +1208,14 @@ async function pushToCloud(data){
   }catch{return false;}
 }
 
+function rerenderCurrentPage(){
+  const name=document.querySelector('.page.on')?.id.replace('page-','')||'schedule';
+  if(name==='plan')renderPlan();
+  else if(name==='season')renderSeason();
+  else if(name==='schedule')renderSchedule();
+  else if(name==='print'){populatePrintSel();renderPrint();}
+  else if(name==='settings')renderSettings();
+}
 async function syncFromCloud(){
   setSyncBadge('syncing');
   const cloud=await pullFromCloud();
@@ -1236,7 +1225,7 @@ async function syncFromCloud(){
     S=cloud;
     localStorage.setItem(STORAGE_KEY,JSON.stringify(S));
     setSyncBadge('updated');
-    renderHeader();renderPlan();
+    renderHeader();rerenderCurrentPage();
   }else{
     setSyncBadge('ok');
   }
@@ -1271,8 +1260,6 @@ function renderHeader(){
   if(pb)pb.textContent=`${cfg.teamName} U9 · ${cfg.teamCode} · ${cfg.teamLoc} · ${cfg.season}`;
   const hn=document.getElementById('hTeamName');
   if(hn)hn.textContent=cfg.teamName.toUpperCase();
-  const he=document.getElementById('hEyebrow');
-  if(he)he.textContent=`U9 · ${cfg.teamCode}`;
   const se=document.getElementById('seasonEyebrow');
   if(se)se.textContent=`${cfg.teamName} · ${cfg.teamCode}`;
   const pe=document.getElementById('printEyebrow');
@@ -1403,7 +1390,7 @@ function computeGroupPrefs(){
 
 // Swaps out up to one over-represented tier player per tier so neither top nor bottom
 // tier exceeds 2 players on the field in a single rotation slot.
-function applyTierBalance(onField,avail,must,tgtMap,used,left,topTier,botTier){
+function applyTierBalance(onField,avail,tgtMap,used,left,topTier,botTier){
   let field=[...onField],bench=[...avail];
   for(const [tier,notTier] of [[topTier,p=>!topTier.includes(p)],[botTier,p=>!botTier.includes(p)]]){
     if(field.filter(p=>tier.includes(p)).length<=2)continue;
@@ -1475,7 +1462,7 @@ function genRots(players,seasonStats,prevRots,seed,groupPrefs,tierConfig){
     // Tier balance: ensure no more than 2 top-tier or 2 bottom-tier players per rotation
     if(topTier.length||botTier.length){
       const avail=players.filter(p=>!onField.includes(p));
-      onField=applyTierBalance(onField,avail,must,tgtMap,used,left,topTier,botTier);
+      onField=applyTierBalance(onField,avail,tgtMap,used,left,topTier,botTier);
     }
 
     const rot=bestPos(onField,gpC,sp,r===0?prevRots?.[0]:null,rand,posWeights);
@@ -1826,14 +1813,14 @@ function showAlerts(al){
 }
 
 // ── Nav ────────────────────────────────
-function prevG(){if(S.gid>1){S.gid--;save();renderPlan();}}
-function nextG(){if(S.gid<6){S.gid++;save();renderPlan();}}
-function goToGame(id){S.gid=id;S.games[String(id)]=S.games[String(id)]||{};save();nav('plan');}
+function prevG(){if(S.gid>1){S.gid--;renderPlan();}}
+function nextG(){if(S.gid<6){S.gid++;renderPlan();}}
+function goToGame(id){S.gid=id;S.games[String(id)]=S.games[String(id)]||{};nav('plan');}
 function navPlanTab(tabEl){
   const today=new Date();today.setHours(0,0,0,0);
   const next=GAMES.find(g=>{
     const [m,d]=g.date.split('/').map(Number);
-    const gd=new Date(2026,m-1,d);
+    const gd=new Date(new Date().getFullYear(),m-1,d);
     return !S.games[String(g.id)]?.done && gd>=today;
   });
   if(next){S.gid=next.id;S.games[String(next.id)]=S.games[String(next.id)]||{};}
@@ -1859,7 +1846,12 @@ function renderSeason(){
   const dc=Object.values(S.games).filter(g=>g.done).length;
   let wins=0,losses=0,ties=0;
   Object.values(S.games).forEach(gd=>{if(gd.done&&gd.score){const[u,t]=gd.score;if(u>t)wins++;else if(t>u)losses++;else ties++;}});
-  const upcoming=GAMES.filter(g=>!S.games[String(g.id)]?.done);
+  const _tod=new Date();_tod.setHours(0,0,0,0);
+  const upcoming=GAMES.filter(g=>{
+    if(S.games[String(g.id)]?.done)return false;
+    const[_gm,_gd]=g.date.split('/').map(Number);
+    return new Date(new Date().getFullYear(),_gm-1,_gd)>=_tod;
+  });
   const g1=upcoming[0]||null,g2=upcoming[1]||null;
   function gameBlock(g,label){
     if(!g)return`<div style="min-width:160px"><div class="xs muted" style="text-transform:uppercase;letter-spacing:.06em;font-weight:500">${label}</div><div style="font-size:16px;font-weight:400;color:var(--text-secondary);margin-top:4px">—</div></div>`;
@@ -1893,7 +1885,7 @@ function renderSeason(){
     return`<tr><td>${p}</td><td>${st.gp}</td>
       <td><span class="badge ${st.min<dc*15?'badge-red':st.min<dc*18?'badge-warn':'badge-green'}">${st.min} min</span></td>
       <td>${avg}</td><td>${pv[0]}</td><td>${pv[1]}</td><td>${pv[2]}</td><td>${pv[3]}</td>
-      <td><span class="badge ${mc>=2?'badge-warn':'badge-green'}">${mc}×</span></td>
+      <td><span class="badge ${mc>=3?'badge-warn':'badge-green'}">${mc}×</span></td>
       <td><div class="pips">${pips}</div></td></tr>`;
   }).join('');
   const maxM=Math.max(...allM,1);
@@ -1931,7 +1923,7 @@ function renderPrint(){
   const QN=['Q1','Q2','Q3','Q4'];
   const totalCols=4*rpq;
 
-  function buildCopy(n){
+  function buildCopy(){
     const cfg=getCfg();
     // Header
     let h=`<div class="print-copy-card">
@@ -1978,7 +1970,7 @@ function renderPrint(){
   }
 
   document.getElementById('printArea').innerHTML=`
-    <div class="print-copies" style="display:grid;gap:16px">${buildCopy(1)}${buildCopy(2)}${buildCopy(3)}</div>`;
+    <div class="print-copies" style="display:grid;gap:16px">${buildCopy()}${buildCopy()}${buildCopy()}</div>`;
 }
 
 function openPhoneView(){
@@ -2072,6 +2064,7 @@ function renderRoster(){
 function addPlayer(){
   const i=document.getElementById('newName'),n=i.value.trim();
   if(!n||S.roster.includes(n))return;
+  if(!/^[A-Za-z][A-Za-z\s\-\.]*$/.test(n)){alert('Names may only contain letters, spaces, hyphens, and periods.');return;}
   S.roster.push(n);
   if(!S.ps[n])S.ps[n]={gp:0,min:0,pos:{'Forward':0,'Mid (P)':0,'Mid (C)':0,'Defense':0}};
   i.value='';save();renderRoster();
