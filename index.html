@@ -1118,6 +1118,26 @@ const PPIP = {'Forward':'pfwd','Mid (P)':'pmp','Mid (C)':'pmc','Defense':'pdef'}
 const TIER_TOP = ['Evan','Jack','Jacob'];    // strongest → middle
 const TIER_BOT = ['Theo','Ronan','Nathan'];  // weakest  → middle
 
+// ── Slot-time helpers ───────────────────
+// 7 players → rpq=3, split 3:30/3:30/3:00 (display) with [4,3,3] stat minutes
+// 8 players → rpq=2, split 5:00/5:00
+function fmtMin(m){
+  const mins=Math.floor(m),secs=Math.round((m-mins)*60);
+  return secs?`${mins}:${String(secs).padStart(2,'0')}`:`${mins}:00`;
+}
+function getSlotMins(rpq){
+  if(rpq===3)return[4,3,3]; // approx integer stat-minutes for 3:30/3:30/3:00
+  if(rpq===2)return[5,5];
+  const base=Math.floor(10/rpq);
+  return Array.from({length:rpq},(_,i)=>i===rpq-1?10-base*(rpq-1):base);
+}
+function getSlotTimes(rpq){
+  if(rpq===3)return[{mS:0,mE:3.5},{mS:3.5,mE:7},{mS:7,mE:10}];
+  if(rpq===2)return[{mS:0,mE:5},{mS:5,mE:10}];
+  let t=0;const base=Math.floor(10/rpq);
+  return Array.from({length:rpq},(_,i)=>{const s=t,e=i===rpq-1?10:t+base;t=e;return{mS:s,mE:e};});
+}
+
 // JERSEY RULE: Home = Gray, Away = Blue
 const GAMES = [
   {id:1, date:'04/18', day:'Saturday, Apr 18', time:'4:30 PM', arrive:'4:00 PM',
@@ -1434,7 +1454,7 @@ function genRots(players,seasonStats,prevRots,seed,groupPrefs,tierConfig){
   const topTier=(tierConfig&&tierConfig.top)||[];
   const botTier=(tierConfig&&tierConfig.bot)||[];
 
-  const n=players.length,rpq=n>=7?2:3,total=4*rpq,totalSlots=total*4;
+  const n=players.length,rpq=n>=8?2:3,total=4*rpq,totalSlots=total*4;
   const sMins=players.map(p=>seasonStats[p]?.min||0),minS=Math.min(...sMins);
   const invW=sMins.map(m=>1/(1+(m-minS)/10)),wSum=invW.reduce((a,b)=>a+b,0);
   const raw=invW.map(w=>(w/wSum)*totalSlots),tgt=raw.map(x=>Math.floor(x));
@@ -1482,6 +1502,25 @@ function genRots(players,seasonStats,prevRots,seed,groupPrefs,tierConfig){
         return(sMins[players.indexOf(a)])-(sMins[players.indexOf(b)]);
       });
       while(onField.length<4&&pool.length)onField.push(pool.shift());
+    }
+
+    // Within-quarter guarantee: at the last slot of each quarter, force in any player
+    // who has not appeared in any earlier slot that quarter, ensuring every player plays ≥1 slot per quarter.
+    if(r%rpq===rpq-1){
+      const qStart=r-(rpq-1);
+      const notYetThisQ=players.filter(p=>{
+        if(onField.includes(p))return false;
+        for(let s=qStart;s<r;s++)if(rots[s]&&rots[s].includes(p))return false;
+        return true;
+      });
+      notYetThisQ.forEach(p=>{if(!onField.includes(p))onField.push(p);});
+      while(onField.length>4){
+        // Drop non-forced player with the most remaining quota (least urgent)
+        const droppable=onField.filter(p=>!notYetThisQ.includes(p))
+          .sort((a,b)=>(tgtMap[b]-used[b])-(tgtMap[a]-used[a]));
+        if(!droppable.length)break;
+        onField.splice(onField.indexOf(droppable[0]),1);
+      }
     }
 
     // Tier balance: ensure no more than 2 top-tier or 2 bottom-tier players per rotation
@@ -1759,7 +1798,8 @@ function markDone(){
   gd.done=true;
   const att=getAtt(S.gid);
   const rpqVal=gd.rpq||2;
-  gd.rots.forEach((rot,ri)=>{const riInQ=ri%rpqVal;const slotMin=(riInQ===rpqVal-1)?10-(rpqVal-1)*Math.floor(10/rpqVal):Math.floor(10/rpqVal);POS.forEach((pos,i)=>{const p=rot[i];if(!p)return;if(!S.ps[p])S.ps[p]={gp:0,min:0,pos:{'Forward':0,'Mid (P)':0,'Mid (C)':0,'Defense':0}};S.ps[p].min+=slotMin;S.ps[p].pos[pos]++;});});
+  const _doneSlotMins=getSlotMins(rpqVal);
+  gd.rots.forEach((rot,ri)=>{const riInQ=ri%rpqVal;const slotMin=_doneSlotMins[riInQ];POS.forEach((pos,i)=>{const p=rot[i];if(!p)return;if(!S.ps[p])S.ps[p]={gp:0,min:0,pos:{'Forward':0,'Mid (P)':0,'Mid (C)':0,'Defense':0}};S.ps[p].min+=slotMin;S.ps[p].pos[pos]++;});});
   att.forEach(p=>{if(S.ps[p])S.ps[p].gp++;});
   if(!gd.caps){const caps=suggestCaps(S.gid);gd.caps=caps;if(!S.capLog.find(x=>x.gid===S.gid))S.capLog.push({gid:S.gid,caps});}
   save();renderPlan();
@@ -1774,9 +1814,9 @@ function renderRot(rots,rpq,att,editable){
       <div class="rot-qhead"><span>${QN[q]}</span></div>
       <table class="rot-tbl"><thead><tr><th>Position</th>`;
     for(let r=0;r<rpq;r++){
-      const mS=r*Math.floor(10/rpq),mE=(r===rpq-1)?10:(r+1)*Math.floor(10/rpq);
+      const{mS,mE}=getSlotTimes(rpq)[r];
       const lbl=['First','Second','Third'][r]||`Slot ${r+1}`;
-      html+=`<th>${lbl} &nbsp;<span style="font-weight:400;font-size:10px">${mS}:00–${mE}:00</span></th>`;
+      html+=`<th>${lbl} &nbsp;<span style="font-weight:400;font-size:10px">${fmtMin(mS)}–${fmtMin(mE)}</span></th>`;
     }
     html+=`</tr></thead><tbody>`;
     POS.forEach((pos,pi)=>{
@@ -1829,7 +1869,8 @@ function checkAlerts(rots,att,rpq){
   rots.forEach(r=>{if(!r)return;POS.forEach((pos,i)=>{const p=r[i];if(!p)return;if(!gpc[p])gpc[p]={};gpc[p][pos]=(gpc[p][pos]||0)+1;});});
   const rep=[];att.forEach(p=>POS.forEach(pos=>{if((gpc[p]?.[pos]||0)>1)rep.push(`${p} → ${pos}`);}));
   if(rep.length)al.push({t:'a-warn',msg:'Position repeats this game: '+rep.join(', ')});
-  const mins={};att.forEach(p=>{let m=0;rots.forEach((r,ri)=>{if(r&&r.includes(p)){const riInQ=ri%rpq;m+=(riInQ===rpq-1)?10-(rpq-1)*Math.floor(10/rpq):Math.floor(10/rpq);}});mins[p]=m;});
+  const _alertSlotMins=getSlotMins(rpq);
+  const mins={};att.forEach(p=>{let m=0;rots.forEach((rot,ri)=>{if(rot&&rot.includes(p))m+=_alertSlotMins[ri%rpq];});mins[p]=m;});
   const lo=Math.min(...Object.values(mins)),hi=Math.max(...Object.values(mins));
   if(hi-lo<=5)al.push({t:'a-ok',msg:`Playing time balanced: ${lo}–${hi} min per player.`});
   else if(hi-lo>10)al.push({t:'a-warn',msg:`Playing time spread: ${lo}–${hi} min. Check distribution.`});
@@ -1969,9 +2010,9 @@ function renderPrint(){
     h+=`<table class="pc-table"><thead><tr><th>Position</th>`;
     for(let q=0;q<4;q++){
       for(let r=0;r<rpq;r++){
-        const mS=r*Math.floor(10/rpq),mE=(r===rpq-1)?10:(r+1)*Math.floor(10/rpq);
+        const{mS:_mS,mE:_mE}=getSlotTimes(rpq)[r];
         const qStart=(r===0)?'q-start':'';
-        h+=`<th class="${qStart}">${QN[q]}<br><span style="font-weight:400">${mS}min – ${mE}min</span></th>`;
+        h+=`<th class="${qStart}">${QN[q]}<br><span style="font-weight:400">${fmtMin(_mS)} – ${fmtMin(_mE)}</span></th>`;
       }
     }
     h+=`</tr></thead><tbody>`;
@@ -2021,8 +2062,8 @@ function openPhoneView(){
       <table style="width:100%;border-collapse:collapse;font-size:12px">
       <thead><tr><th style="text-align:left;padding:4px 6px;background:#e8e8e8;border:1px solid #aaa;font-size:10px">POS</th>`;
     for(let r=0;r<rpq;r++){
-      const mS=r*Math.floor(10/rpq),mE=(r===rpq-1)?10:(r+1)*Math.floor(10/rpq);
-      h+=`<th style="padding:4px 6px;background:#e8e8e8;border:1px solid #aaa;text-align:center;font-size:10px">${mS}–${mE} min</th>`;
+      const{mS:_pmS,mE:_pmE}=getSlotTimes(rpq)[r];
+      h+=`<th style="padding:4px 6px;background:#e8e8e8;border:1px solid #aaa;text-align:center;font-size:10px">${fmtMin(_pmS)}–${fmtMin(_pmE)} min</th>`;
     }
     h+=`</tr></thead><tbody>`;
     POS.forEach((pos,pi)=>{
