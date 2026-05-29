@@ -1504,19 +1504,19 @@ function genRots(players,seasonStats,prevRots,seed,groupPrefs,tierConfig){
       while(onField.length<4&&pool.length)onField.push(pool.shift());
     }
 
-    // Within-quarter guarantee: at the last slot of each quarter, force in any player
-    // who has not appeared in any earlier slot that quarter, ensuring every player plays ≥1 slot per quarter.
-    if(r%rpq===rpq-1){
-      const qStart=r-(rpq-1);
-      const notYetThisQ=players.filter(p=>{
+    // Consecutive-slot guarantee: at every non-first slot within a quarter, force in any
+    // player who sat out the immediately preceding slot. This prevents back-to-back bench
+    // stints (0+1 or 1+2) while allowing the skip pattern (0+2), which is acceptable.
+    if(r%rpq>0){
+      const prevSlotIdx=r-1;
+      const satOutPrev=players.filter(p=>{
         if(onField.includes(p))return false;
-        for(let s=qStart;s<r;s++)if(rots[s]&&rots[s].includes(p))return false;
-        return true;
+        return!(rots[prevSlotIdx]&&rots[prevSlotIdx].includes(p));
       });
-      notYetThisQ.forEach(p=>{if(!onField.includes(p))onField.push(p);});
+      satOutPrev.forEach(p=>{if(!onField.includes(p))onField.push(p);});
       while(onField.length>4){
         // Drop non-forced player with the most remaining quota (least urgent)
-        const droppable=onField.filter(p=>!notYetThisQ.includes(p))
+        const droppable=onField.filter(p=>!satOutPrev.includes(p))
           .sort((a,b)=>(tgtMap[b]-used[b])-(tgtMap[a]-used[a]));
         if(!droppable.length)break;
         onField.splice(onField.indexOf(droppable[0]),1);
