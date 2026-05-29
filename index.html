@@ -1504,10 +1504,10 @@ function genRots(players,seasonStats,prevRots,seed,groupPrefs,tierConfig){
       while(onField.length<4&&pool.length)onField.push(pool.shift());
     }
 
-    // Consecutive-slot guarantee: at every non-first slot within a quarter, force in any
-    // player who sat out the immediately preceding slot. This prevents back-to-back bench
-    // stints (0+1 or 1+2) while allowing the skip pattern (0+2), which is acceptable.
-    if(r%rpq>0){
+    // Consecutive-slot guarantee: at every slot after the first, force in any player who
+    // sat out the immediately preceding slot. Fires across quarter boundaries too, so
+    // players sitting out the last slot of a quarter always start the next quarter.
+    if(r>0){
       const prevSlotIdx=r-1;
       const satOutPrev=players.filter(p=>{
         if(onField.includes(p))return false;
