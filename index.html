@@ -1435,13 +1435,15 @@ function computeGroupPrefs(){
 
 // Swaps out up to one over-represented tier player per tier so neither top nor bottom
 // tier exceeds 2 players on the field in a single rotation slot.
-function applyTierBalance(onField,avail,tgtMap,used,left,topTier,botTier){
+// guaranteed: Set of players who must not be removed (consecutive-slot protection).
+function applyTierBalance(onField,avail,tgtMap,used,left,topTier,botTier,guaranteed){
+  guaranteed=guaranteed||new Set();
   let field=[...onField],bench=[...avail];
   for(const [tier,notTier] of [[topTier,p=>!topTier.includes(p)],[botTier,p=>!botTier.includes(p)]]){
     if(field.filter(p=>tier.includes(p)).length<=2)continue;
-    const out=field.find(p=>tier.includes(p)&&(tgtMap[p]-used[p])<left); // non-must tier player
+    const out=field.find(p=>tier.includes(p)&&!guaranteed.has(p)&&(tgtMap[p]-used[p])<left);
     if(!out)continue;
-    const inn=bench.find(p=>notTier(p)&&(tgtMap[p]-used[p])>0); // bench player not in this tier
+    const inn=bench.find(p=>notTier(p)&&(tgtMap[p]-used[p])>0);
     if(!inn)continue;
     field=field.filter(p=>p!==out); field.push(inn);
     bench=bench.filter(p=>p!==inn); bench.push(out);
@@ -1504,29 +1506,29 @@ function genRots(players,seasonStats,prevRots,seed,groupPrefs,tierConfig){
       while(onField.length<4&&pool.length)onField.push(pool.shift());
     }
 
-    // Consecutive-slot guarantee: at every slot after the first, force in any player who
-    // sat out the immediately preceding slot. Fires across quarter boundaries too, so
-    // players sitting out the last slot of a quarter always start the next quarter.
+    // Consecutive-slot guarantee: at every slot after the first, all players who sat out
+    // the immediately preceding slot must play this slot. The guaranteed set is built from
+    // ALL such players (even those equity already selected) so tier balance cannot remove
+    // them afterwards. Fires across quarter boundaries too.
+    const guaranteed=new Set();
     if(r>0){
       const prevSlotIdx=r-1;
-      const satOutPrev=players.filter(p=>{
-        if(onField.includes(p))return false;
-        return!(rots[prevSlotIdx]&&rots[prevSlotIdx].includes(p));
+      players.forEach(p=>{
+        if(!(rots[prevSlotIdx]&&rots[prevSlotIdx].includes(p)))guaranteed.add(p);
       });
-      satOutPrev.forEach(p=>{if(!onField.includes(p))onField.push(p);});
+      guaranteed.forEach(p=>{if(!onField.includes(p))onField.push(p);});
       while(onField.length>4){
-        // Drop non-forced player with the most remaining quota (least urgent)
-        const droppable=onField.filter(p=>!satOutPrev.includes(p))
+        const droppable=onField.filter(p=>!guaranteed.has(p))
           .sort((a,b)=>(tgtMap[b]-used[b])-(tgtMap[a]-used[a]));
         if(!droppable.length)break;
         onField.splice(onField.indexOf(droppable[0]),1);
       }
     }
 
-    // Tier balance: ensure no more than 2 top-tier or 2 bottom-tier players per rotation
+    // Tier balance: pass guaranteed so protected players cannot be removed
     if(topTier.length||botTier.length){
       const avail=players.filter(p=>!onField.includes(p));
-      onField=applyTierBalance(onField,avail,tgtMap,used,left,topTier,botTier);
+      onField=applyTierBalance(onField,avail,tgtMap,used,left,topTier,botTier,guaranteed);
     }
 
     const rot=bestPos(onField,gpC,sp,r===0?prevRots?.[0]:null,rand,posWeights);
