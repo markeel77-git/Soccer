@@ -1508,8 +1508,14 @@ function genRots(players,seasonStats,prevRots,seed,groupPrefs,tierConfig){
     }
 
     if(onField.length<4){
-      // Fill from bench: equity first, then prefer players in their non-usual group slot
-      const pool=players.filter(p=>!onField.includes(p)&&!mustSit.has(p)).sort((a,b)=>{
+      // Fill from bench: equity first, then prefer players in their non-usual group slot.
+      // At the second slot of a 7-player quarter (rpq=2, !isFirst), TIER_BOT players who played
+      // the first slot are excluded from carryover — they should not play 10 unbroken minutes.
+      const pool=players.filter(p=>{
+        if(onField.includes(p)||mustSit.has(p))return false;
+        if(rpq===2&&!isFirst&&botTier.includes(p)&&rots[r-1]?.includes(p))return false;
+        return true;
+      }).sort((a,b)=>{
         const td=(tgtMap[b]-used[b])-(tgtMap[a]-used[a]);if(td)return td;
         const ga=groupPrefs[a]==='first'?(isFirst?-2:2):groupPrefs[a]==='second'?(isFirst?2:-2):0;
         const gb=groupPrefs[b]==='first'?(isFirst?-2:2):groupPrefs[b]==='second'?(isFirst?2:-2):0;
