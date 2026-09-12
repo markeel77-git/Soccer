@@ -43,6 +43,10 @@ Dayton, Wells and Mateo unrated (Middle) — Mark to set in Settings → Skill T
   shows Offline on localhost by design (worker CORS allows only the production origin).
 - Rotation constraints are checked headlessly by evaluating `genRots` out of `app.js` in Node;
   re-run that after any engine change (see the 2026-09-12 session).
-- Deploy = `git push origin main` (GitHub Pages) plus `wrangler deploy` (worker). Both are
-  production; Mark confirms before either.
+- Deploy = `git push origin main` (GitHub Pages) plus `wrangler deploy` (worker; the route is
+  declared in `wrangler.toml`). Both are production; Mark confirms before either.
+- Cloudflare fronts the site and caches responses for 4 hours, 404s included. The three shells
+  reference `app.js`, `markup.js` and `app.css` with a `?v=YYYYMMDDx` query: **bump it in all
+  three shells whenever those files change**, or the edge keeps serving the old copy. Never
+  request a not-yet-published path on the live domain — that caches the 404 (bitten 2026-09-12).
 - Parent contact details are never stored in the app or repo — first names only.
