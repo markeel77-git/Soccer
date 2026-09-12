@@ -2,14 +2,19 @@ name = "thunder-soccer"
 main = "worker.js"
 compatibility_date = "2025-01-01"
 
+# Route: every /api/* request on the custom domain goes to this worker (GitHub Pages serves the rest).
+# Declared here (since 2026-09-12) so `wrangler deploy` needs no workers.dev subdomain and no dashboard step.
+workers_dev = false
+routes = [
+  { pattern = "soccer.theiehls.com/api/*", zone_name = "theiehls.com" }
+]
+
 # KV namespace — create with: wrangler kv namespace create SOCCER_KV
 # Then paste the resulting id below
 [[kv_namespaces]]
 binding = "KV"
 id = "53e8ec3dfa6c4f2da157fc7bd67c2f73"
 
-# Route is added manually in the Cloudflare dashboard → Workers Routes
-# Pattern: soccer.theiehls.com/api/*   Worker: thunder-soccer
 
 # To deploy:
 #   1. npm install -g wrangler
