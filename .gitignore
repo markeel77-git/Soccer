@@ -4,3 +4,9 @@
 # Editor
 .vscode/
 *.swp
+
+# Claude Code local config
+.claude/
+
+# Wrangler local state and account cache
+.wrangler/
