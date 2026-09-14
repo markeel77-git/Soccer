@@ -6,7 +6,7 @@ app for two 4v4 U9 teams Mark's family coaches. Live at soccer.theiehls.com; rep
 
 ## What it is
 
-- **Thunder** (boys, CF09A) — Mark coaches, Jacob plays. URL `/boys/`.
+- **Thunder Wolves** (boys, CF09A; renamed from Thunder 2026-09-14) — Mark coaches, Jacob plays. URL `/boys/`.
 - **Blue Dolphins** (girls, CF09R) — Haley coaches, Annie plays. URL `/girls/`.
 - Root `/` is a team chooser. Each team has its own data record; the two never mix.
 

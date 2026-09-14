@@ -5,7 +5,7 @@ with four positions and 10-minute quarters. It runs one team per URL path:
 
 | Team | URL | Data key |
 |---|---|---|
-| Thunder (boys, CF09A) | [soccer.theiehls.com/boys](https://soccer.theiehls.com/boys/) | `team:boys` |
+| Thunder Wolves (boys, CF09A) | [soccer.theiehls.com/boys](https://soccer.theiehls.com/boys/) | `team:boys` |
 | Blue Dolphins (girls, CF09R) | [soccer.theiehls.com/girls](https://soccer.theiehls.com/girls/) | `team:girls` |
 
 The root URL is a team chooser. Each team keeps its own roster, schedule, skill tiers,

@@ -10,7 +10,7 @@ try{localStorage.setItem('subtracker_last_team',TEAM_SLUG);}catch(e){}
 const CVSC='Cedar Valley Soccer Complex';
 const TEAM_DEFAULTS={
   boys:{
-    cfg:{teamName:'Thunder',teamCode:'CF09A',ageGroup:'U9',teamLoc:'Cedar Falls, IA',season:'Fall 2026',emoji:'⚡',coachName:'Mark',
+    cfg:{teamName:'Thunder Wolves',teamCode:'CF09A',ageGroup:'U9',teamLoc:'Cedar Falls, IA',season:'Fall 2026',emoji:'🐺',coachName:'Mark',
          homeJersey:'Gray',awayJersey:'Blue',tierTop:['Jack','Jacob'],tierBot:['Theo','Ronan']},
     roster:['Theo','Mateo','Beckem','Ronan','Jack','Jacob','Dayton','Wells'],
     schedule:[
