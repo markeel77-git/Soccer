@@ -32,8 +32,12 @@ app for two 4v4 U9 teams Mark's family coaches. Live at soccer.theiehls.com; rep
 ## Rotation engine (`genRots`)
 
 4 on the field, 10-minute quarters. 7–8 players → 2 slots/quarter; 6 → 3 slots. Rules: nobody
-sits two slots in a row; nobody plays three in a row; max 2 Top-tier and 2 Bottom-tier on the
-field. With 9+ players the sit-twice rule relaxes for whoever is owed the fewest appearances.
+sits two slots in a row; nobody plays three in a row; each tier is spread across the groups —
+per-slot cap `ceil(tierSize × 4 / players)` with a matching floor, so 2 rated players split 1+1
+and 3 allow 2 together. Exact ties in the equity sort break on a seeded random key (added
+2026-09-14) so Reshuffle changes the groups, not just positions; with 8 players the groups are
+otherwise locked for the whole game by the alternation rules. With 9+ players the sit-twice rule
+relaxes for whoever is owed the fewest appearances.
 `TEAM_DEFAULTS` tiers for boys as of 2026-09-12: Top = Jack, Jacob; Bottom = Theo, Ronan;
 Dayton, Wells and Mateo unrated (Middle) — Mark to set in Settings → Skill Tiers. Girls: all Middle.
 

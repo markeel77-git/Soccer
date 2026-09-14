@@ -26,7 +26,7 @@ needed for a new season.
 
 - 8 players: 2 slots per quarter (5:00 each), 4 play / 4 sit. 7 players: 2 slots, one carryover per quarter. 6 players: 3 slots (3:30 / 3:30 / 3:00).
 - No player sits two consecutive slots; no player plays three consecutive slots (with 9+ players the first rule relaxes for whoever is owed the fewest appearances).
-- At most 2 Top-tier and 2 Bottom-tier players on the field at once (Settings → Skill Tiers).
+- Top-tier and Bottom-tier players are spread across the groups: two rated players split one per group, three allow two together (Settings → Skill Tiers).
 - Playing time is weighted toward players with fewer season minutes; positions rotate so nobody repeats one in a game.
 
 ## Files

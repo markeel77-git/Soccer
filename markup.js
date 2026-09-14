@@ -169,7 +169,7 @@ const APP_HTML = `
   <div class="card-group mb16">
     <div class="card">
       <div class="card-label">Skill Tiers <button class="btn btn-sm" id="tierLockBtn" onclick="toggleTierLock()">🔒 Locked</button></div>
-      <div class="xs muted">The rotation keeps at most 2 Top-tier and 2 Bottom-tier players on the field at once. Leave everyone in Middle to turn this off.</div>
+      <div class="xs muted">The rotation spreads Top-tier and Bottom-tier players across the groups so neither tier stacks in one slot (two rated players are split one per group; three allow two together). Leave everyone in Middle to turn this off.</div>
       <div id="tierArea"></div>
     </div>
   </div>

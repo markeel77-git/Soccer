@@ -397,18 +397,37 @@ function computeGroupPrefs(){
 // tier exceeds 2 players on the field in a single rotation slot.
 // guaranteed: Set of players who must not be removed (consecutive-slot protection).
 // mustSit: Set of players who played the two preceding slots and must bench this slot.
+// Cap per tier scales with tier size: ceil(tierSize × 4 / players), min 1. With 8 players that is
+// 2 for a 3-player tier (the spring rule) and 1 for a 2-player tier, so two top-tier players are
+// split across the two groups instead of stacked together.
+function tierCap(tierLen,n){return Math.max(1,Math.ceil(tierLen*4/Math.max(n,4)));}
 function applyTierBalance(onField,avail,tgtMap,used,left,topTier,botTier,guaranteed,mustSit){
   guaranteed=guaranteed||new Set();
   mustSit=mustSit||new Set();
   let field=[...onField],bench=[...avail];
-  for(const [tier,notTier] of [[topTier,p=>!topTier.includes(p)],[botTier,p=>!botTier.includes(p)]]){
-    if(field.filter(p=>tier.includes(p)).length<=2)continue;
-    const out=field.find(p=>tier.includes(p)&&!guaranteed.has(p)&&(tgtMap[p]-used[p])<left);
-    if(!out)continue;
-    const inn=bench.find(p=>notTier(p)&&!mustSit.has(p)&&(tgtMap[p]-used[p])>0);
-    if(!inn)continue;
-    field=field.filter(p=>p!==out); field.push(inn);
-    bench=bench.filter(p=>p!==inn); bench.push(out);
+  const n=field.length+bench.length;
+  const neither=p=>!topTier.includes(p)&&!botTier.includes(p);
+  const canSit=p=>!guaranteed.has(p)&&(tgtMap[p]-used[p])<left;   // may leave the field this slot
+  const canPlay=p=>!mustSit.has(p)&&(tgtMap[p]-used[p])>0;         // may join the field this slot
+  const swap=(out,inn)=>{field=field.filter(p=>p!==out);field.push(inn);bench=bench.filter(p=>p!==inn);bench.push(out);};
+  for(let pass=0;pass<2;pass++){
+    for(const [tier,notTier] of [[topTier,p=>!topTier.includes(p)],[botTier,p=>!botTier.includes(p)]]){
+      if(!tier.length)continue;
+      const cap=tierCap(tier.length,n);
+      // Floor: with 8 players the bench is the other group, so "at most cap on the field" must be
+      // matched by "at least tierSize − cap on the field" or the other group ends up stacked.
+      const floor=Math.max(0,tier.length-cap,tier.length-(n-4));
+      const onF=field.filter(p=>tier.includes(p)).length;
+      if(onF>cap){
+        const out=field.find(p=>tier.includes(p)&&canSit(p));
+        const inn=out&&(bench.find(p=>neither(p)&&canPlay(p))||bench.find(p=>notTier(p)&&canPlay(p)));
+        if(inn)swap(out,inn);
+      }else if(onF<floor){
+        const inn=bench.find(p=>tier.includes(p)&&canPlay(p));
+        const out=inn&&(field.find(p=>neither(p)&&canSit(p))||field.find(p=>notTier(p)&&canSit(p)));
+        if(out)swap(out,inn);
+      }
+    }
   }
   return field;
 }
@@ -452,6 +471,9 @@ function genRots(players,seasonStats,prevRots,seed,groupPrefs,tierConfig){
       });
     }
 
+    // Per-slot random keys: break exact ties in the sorts below so a new seed changes the groups.
+    const rk={};players.forEach(p=>rk[p]=rand());
+
     const must=players.filter(p=>!mustSit.has(p)&&(tgtMap[p]-used[p])>=left);
     let onField=[...must];
 
@@ -463,7 +485,7 @@ function genRots(players,seasonStats,prevRots,seed,groupPrefs,tierConfig){
         // Prefer to keep players that belong in this slot type (lower value = kept)
         const ga=groupPrefs[a]==='first'?(isFirst?1:-1):groupPrefs[a]==='second'?(isFirst?-1:1):0;
         const gb=groupPrefs[b]==='first'?(isFirst?1:-1):groupPrefs[b]==='second'?(isFirst?-1:1):0;
-        return ga-gb;
+        return (ga-gb)||(rk[a]-rk[b]);
       }).slice(0,4);
     }
 
@@ -480,7 +502,8 @@ function genRots(players,seasonStats,prevRots,seed,groupPrefs,tierConfig){
         const ga=groupPrefs[a]==='first'?(isFirst?-2:2):groupPrefs[a]==='second'?(isFirst?2:-2):0;
         const gb=groupPrefs[b]==='first'?(isFirst?-2:2):groupPrefs[b]==='second'?(isFirst?2:-2):0;
         if(ga!==gb)return gb-ga; // higher score = better fit for this slot → comes first
-        return(sMins[players.indexOf(a)])-(sMins[players.indexOf(b)]);
+        const md=(sMins[players.indexOf(a)])-(sMins[players.indexOf(b)]);
+        return md||(rk[a]-rk[b]);
       });
       while(onField.length<4&&pool.length)onField.push(pool.shift());
     }
