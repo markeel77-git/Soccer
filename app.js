@@ -245,6 +245,8 @@ function renderHeader(){
   if(he)he.textContent=cfg.emoji||'⚽';
   const hn=document.getElementById('hTeamName');
   if(hn)hn.textContent=cfg.teamName.toUpperCase();
+  const hl=document.getElementById('hTeamLink');
+  if(hl)hl.href=`/${TEAM_SLUG}/`;
   const eyebrow=[cfg.teamName,cfg.teamCode].filter(Boolean).join(' · ');
   for(const id of['seasonEyebrow','printEyebrow','settingsEyebrow']){const el=document.getElementById(id);if(el)el.textContent=eyebrow;}
   const sche=document.getElementById('schedEyebrow');

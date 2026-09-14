@@ -7,8 +7,8 @@ const APP_HTML = `
 <!-- Header -->
 <header>
   <div class="h-left">
-    <div class="h-wordmark">⚽ SUB TRACKER</div>
-    <div class="h-submark"><span class="bolt" id="hEmoji">⚽</span> <span id="hTeamName">—</span></div>
+    <a class="h-wordmark" href="/" title="Choose a team">⚽ SUB TRACKER</a>
+    <a class="h-submark" id="hTeamLink" href="#" title="Team home" onclick="nav('schedule');window.scrollTo(0,0);return false"><span class="bolt" id="hEmoji">⚽</span> <span id="hTeamName">—</span></a>
   </div>
   <div class="h-right">
     <div id="syncBadge" class="sync-dot" style="display:none"></div>

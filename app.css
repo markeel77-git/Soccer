@@ -882,3 +882,7 @@ hr { border: none; border-top: 1px solid var(--grey-200); margin: 24px 0; }
 input[type=date], input[type=time] { font: inherit; font-size: 14px; padding: 8px 10px; border: 1px solid var(--border-secondary, #ccc); border-radius: 6px; background: #fff; color: var(--text-primary); }
 input[type=date]:focus, input[type=time]:focus { outline: none; border-color: var(--border-primary, #111); }
 .page-meta a { color: inherit; text-decoration: underline; }
+
+/* ── Added 2026-09-14: header wordmark → team chooser, submark → team home ── */
+a.h-wordmark, a.h-submark { color: inherit; text-decoration: none; cursor: pointer; }
+a.h-wordmark:hover, a.h-submark:hover { opacity: .75; }
