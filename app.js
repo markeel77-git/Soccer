@@ -258,6 +258,7 @@ function saveCoachToken(){
   if(v==='••••••••')return;
   setToken(v);
   updateSyncMsg();
+  _tierLocked=true;renderTiers();
   if(!v){showToast('Token cleared — view-only mode.');return;}
   setSyncBadge('syncing');
   pushToCloud(S).then(result=>{
@@ -1173,6 +1174,10 @@ function setTier(p,tier){
 }
 function renderTiers(){
   const el=document.getElementById('tierArea');if(!el)return;
+  // Coach-only: tiers are hidden from anyone browsing without the coach token.
+  const card=document.getElementById('tierCard');
+  if(card)card.style.display=getToken()?'':'none';
+  if(!getToken()){el.innerHTML='';return;}
   const t=getTiers();
   const lb=document.getElementById('tierLockBtn');
   if(lb){lb.textContent=_tierLocked?'🔒 Locked':'🔓 Unlocked';lb.className='btn btn-sm '+(_tierLocked?'btn-lock-on':'btn-lock-off');}

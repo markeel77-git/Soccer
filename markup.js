@@ -166,9 +166,9 @@ const APP_HTML = `
       </div>
     </div>
   </div>
-  <div class="card-group mb16">
+  <div class="card-group mb16" id="tierCard" style="display:none">
     <div class="card">
-      <div class="card-label">Skill Tiers <button class="btn btn-sm" id="tierLockBtn" onclick="toggleTierLock()">🔒 Locked</button></div>
+      <div class="card-label">Skill Tiers <button class="btn btn-sm" id="tierLockBtn" onclick="toggleTierLock()">🔒 Locked</button> <span class="badge" style="font-size:10px">Coach only</span></div>
       <div class="xs muted">The rotation spreads Top-tier and Bottom-tier players across the groups so neither tier stacks in one slot (two rated players are split one per group; three allow two together). Leave everyone in Middle to turn this off.</div>
       <div id="tierArea"></div>
     </div>

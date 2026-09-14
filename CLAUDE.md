@@ -54,3 +54,6 @@ Dayton, Wells and Mateo unrated (Middle) — Mark to set in Settings → Skill T
   three shells whenever those files change**, or the edge keeps serving the old copy. Never
   request a not-yet-published path on the live domain — that caches the 404 (bitten 2026-09-12).
 - Parent contact details are never stored in the app or repo — first names only.
+- Skill tiers are shown in Settings only when a coach token is saved in that browser (since
+  2026-09-14) so parents can be given the link. Caveat: the tiers still travel in the public
+  `GET /api/<slug>/data` JSON — hidden from the UI, not secret from anyone reading the API.
